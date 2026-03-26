@@ -1,0 +1,120 @@
+% Blueprint for Minimum Balanced Bipartitions of Planar Triangulations
+% Generated from minbal_tex/ex_article.tex
+
+\section{Introduction}
+
+\begin{definition}[Balanced Bipartition]
+A balanced bipartition of a graph $G$ is a bipartition $(V_1, V_2)$ of $V(G)$ where $V_1$ and $V_2$ differ in size by at most 1.
+\end{definition}
+
+\begin{definition}[Minimum Balanced Bipartition]
+A minimum balanced bipartition of $G$ is a balanced bipartition $(V_1, V_2)$ of $V(G)$ with the minimum number $e(V_1, V_2)$ of edges with ends in both $V_1$ and $V_2$. 
+\end{definition}
+
+\begin{theorem}[Main Theorem]
+\label{thm:main}
+If $G$ is a plane triangulation, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that both $G[V_1]$ and $G[V_2]$ are connected near-triangulations, and the total number of blocks in $G[V_1]$ and $G[V_2]$ exceeds the total number of internal vertices by at most 2.
+\end{theorem}
+
+\section{Preliminaries}
+
+\begin{definition}[Near-Triangulation]
+A near-triangulation is a plane graph $G$ such that every face of $G$ except at most one is bounded by three edges.
+\end{definition}
+
+\begin{definition}[Internal Vertex]
+Any vertex of $G$ not lying on the boundary of the infinite face of $G$ is said to be an internal vertex of $G$.
+\end{definition}
+
+\begin{proposition}[Edge Count in Near-Triangulation]
+\label{prop:edges_cpnt}
+If $G$ is a connected near-triangulation with $|V(G)| \geq 2$, $b$ blocks, and $i$ internal vertices, then $|E(G)| = 2|V(G)|-2+i-b$.
+\end{proposition}
+
+\begin{corollary}[Edge Cut in Bipartition]
+\label{cor:cut_cpnt}
+If $G$ is a plane triangulation with $|V(G)| \geq 4$, and $(V_1, V_2)$ is a bipartition of $V(G)$ with $|V_1|, |V_2| \geq 2$ such that both $G[V_1], G[V_2]$ are near-triangulations together containing a total of $b$ blocks and $i$ internal vertices, then $e(V_1, V_2) = |V(G)| + b - i - 2$.
+\end{corollary}
+
+\section{Partitioning Lemmas}
+
+\begin{lemma}[4-Connected Partitioning]
+\label{lem:4con}
+If $G$ is a 4-connected plane triangulation or $K_4$, and $e_1, e_2$ are disjoint edges in $G$, then for every $2 \leq k \leq |V(G)|-2$ there exists a bipartition $(V_1, V_2)$ of $V(G)$ such that:
+\begin{enumerate}
+\item $|V_1| = k, |V_2| = |V(G)|-k$,
+\item $e_1 \in E(G[V_1]), e_2 \in E(G[V_2])$, and
+\item both $G[V_1], G[V_2]$ are biconnected near-triangulations.
+\end{enumerate}
+\end{lemma}
+
+\begin{corollary}[Conjecture for 4-Connected Graphs]
+\label{cor:conj_4con}
+If $G$ is a 4-connected planar graph or $G \subseteq K_4$, then for every $1 \leq k \leq |V(G)|-1$ there exists a bipartition $(V_1, V_2)$ of $V(G)$ with $|V_1| = k$ such that $e(V_1, V_2) \leq |V(G)|$.
+\end{corollary}
+
+\begin{lemma}[3-Connected Partitioning]
+\label{lem:3con1}
+If $G$ is a plane triangulation and the vertex-set ${a, b, c} \subseteq V(G)$ bounds the infinite face of $G$, then for every $2 \leq k \leq |V(G)|-1$ there exists a bipartition $(V_1, V_2)$ of $V(G)$ such that:
+\begin{enumerate}
+\item $|V_1| = k, |V_2| = |V(G)|-k$,
+\item ${a, b} \subseteq V_1, c \in V_2$,
+\item $G[V_1]$ is a biconnected near-triangulation with the edge $ab$ on the boundary of the infinite face, and
+\item $G[V_2]$ is a connected near-triangulation with the vertex $c$ on the boundary of the infinite face.
+\end{enumerate}
+\end{lemma}
+
+\begin{lemma}[Partition Refinement]
+\label{lem:3con2}
+Let $G$ be a plane triangulation such that $|V(G)| \geq 4$ and the vertex-set ${a, b, c} \subset V(G)$ bounds the infinite face of $G$. If $(V_1, V_2)$ is a bipartition of $V(G)$ such that ${a, b} \subseteq V_1, c \in V_2$, $|V_2| \geq 2$, and both $G[V_1]$ and $G[V_2]$ are connected near-triangulations, then there exists a vertex $v \in V_2-c$ such that both $G[V_1 \cup v]$ and $G[V_2-v]$ are connected near-triangulations, and the total number of blocks in $G[V_1 \cup v]$ and $G[V_2-v]$ exceeds that in $G[V_1]$ and $G[V_2]$ by at most 1.
+\end{lemma}
+
+\section{Setup and Construction}
+
+\begin{proposition}[Warmup Case]
+\label{prop:warmup}
+If $G$ is a plane triangulation with $|V(G)|=n$ and $T \subseteq G$ is a separating triangle such that each of the two components of $G-V(T)$ contains at least $\lfloor \frac{n}{2} \rfloor-1$ vertices, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that $G[V_1]$ is a biconnected near-triangulation and $G[V_2]$ is a connected near-triangulation with the number of blocks exceeding the total number of internal vertices in $G[V_1]$ and $G[V_2]$ by at most 1.
+\end{proposition}
+
+\begin{proposition}[Sink Degree Case]
+\label{prop:onedegsink}
+If $G$ is a plane triangulation with $|V(G)|=n$ such that the sink in its directed std-tree has degree 1, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that both $V_1$ and $V_2$ induce biconnected near-triangulations.
+\end{proposition}
+
+\begin{proposition}[Sink with 4 Vertices]
+\label{prop:sonly4}
+If $G$ is a plane triangulation with $|V(G)|=n$ such that the sink triangulation $S$ of $G$ contains exactly 4 vertices, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that both $V_1$ and $V_2$ induce connected near-triangulations, and the total number of blocks in $G[V_1]$ and $G[V_2]$ exceeds the total number of internal vertices by at most 2.
+\end{proposition}
+
+\section{Algorithm and Proof Structure}
+
+The proof follows a constructive approach using the following key components:
+
+\begin{enumerate}
+\item {\bf Separating Triangle Decomposition}: Decompose the plane triangulation into 4-connected pieces using separating triangles.
+\item {\bf Navigation Lemmas}: Use Lemmas \ref{lem:4con} and \ref{lem:3con1} to navigate the sink triangulation and build the bipartition incrementally.
+\item {\bf Partition Refinement}: Use Lemma \ref{lem:3con2} to refine partitions while maintaining connectivity and near-triangulation properties.
+\item {\bf Special Case Handling}: Handle special cases where the sink triangulation has degree 1 or exactly 4 vertices.
+\end{enumerate}
+
+The algorithm {\bf Construct Bipartition} implements this approach:
+
+\begin{enumerate}
+\item Initialize with triangles having largest smaller sides
+\item Navigate the sink triangulation using partitioning lemmas
+\item Handle split configurations where direct partitioning is needed
+\item Ensure the final bipartition satisfies the block count constraint
+\end{enumerate}
+
+\section{Conclusion}
+
+The main theorem \ref{thm:main} is proven by:
+\begin{itemize}
+\item Reducing to the case where no separating triangle splits the graph evenly
+\item Using the separating triangle decomposition to identify a 4-connected sink
+\item Applying the partitioning lemmas to construct the desired balanced bipartition
+\item Handling special cases through dedicated propositions
+\item Verifying that the constructed bipartition satisfies all required properties
+\end{itemize}
+
+This confirms the folklore conjecture that for any planar graph $G$, a minimum balanced bipartition $(V_1, V_2)$ of $V(G)$ has $e(V_1, V_2) \leq |V(G)|$.
