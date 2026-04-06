@@ -143,4 +143,11 @@
         }
     ],
     "latex-workshop.latex.outDir": "%WORKSPACE_FOLDER%/blueprint/print"
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "/bin/bash",
+            "args": ["-c", "source /mnt/c/Users/abhin/Downloads/github/ulamai/venv/bin/activate && exec bash"]
+        }
+    }
 }
