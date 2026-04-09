@@ -5,6 +5,7 @@ Authors: Abhinav Shantanam
 -/
 import Mathlib.Combinatorics.SimpleGraph.Dart
 import Mathlib.Combinatorics.SimpleGraph.DegreeSum
+import Mathlib.Combinatorics.SimpleGraph.Connectivity.Connected
 import Mathlib.GroupTheory.Perm.Cycle.Factors
 import Mathlib.GroupTheory.Perm.Cycle.Type
 
@@ -114,6 +115,46 @@ theorem sum_support_card_cycleFactorsFinset :
          (cm.facePerm.cycleFactorsFinset.1.map (Finset.card ∘ Equiv.Perm.support)).sum
     rfl
   rw [h_eq, Equiv.Perm.sum_cycleType, facePerm_support_eq_univ, Finset.card_univ]
+
+end CombMap
+
+/-! ## Dart embedding for induced subgraphs -/
+
+/-- Embed a dart of `G.induce ↑S` as a dart of `G` by forgetting the subtype wrappers. -/
+def dartInduceEmbed (S : Finset V) (d : (G.induce (↑S : Set V)).Dart) : G.Dart :=
+  { fst := d.fst.val
+    snd := d.snd.val
+    adj := by have := d.adj; rwa [SimpleGraph.induce_adj] at this }
+
+@[simp]
+theorem dartInduceEmbed_fst (S : Finset V) (d : (G.induce (↑S : Set V)).Dart) :
+    (dartInduceEmbed S d).fst = d.fst.val := rfl
+
+@[simp]
+theorem dartInduceEmbed_snd (S : Finset V) (d : (G.induce (↑S : Set V)).Dart) :
+    (dartInduceEmbed S d).snd = d.snd.val := rfl
+
+namespace CombMap
+
+/-- `cm.perm` preserves the source vertex under any number of iterations. -/
+theorem perm_pow_fst (cm : G.CombMap) (n : ℕ) (d : G.Dart) :
+    ((cm.perm ^ n) d).fst = d.fst := by
+  induction n with
+  | zero => simp
+  | succ k ih =>
+    simp only [pow_succ', Equiv.Perm.mul_apply]
+    rw [cm.source, ih]
+
+/-- For any dart `d` with `d.snd ∈ S`, there exists `k ≥ 1` such that
+    `(cm.perm ^ k d).snd ∈ S` — take `k = orderOf cm.perm`, which returns `d`. -/
+theorem exists_next_in_finset (cm : G.CombMap) (S : Finset V)
+    (d : G.Dart) (hd : d.snd ∈ S) :
+    ∃ k : ℕ, 1 ≤ k ∧ ((cm.perm ^ k) d).snd ∈ S :=
+  ⟨orderOf cm.perm, orderOf_pos cm.perm, by
+    have : (cm.perm ^ orderOf cm.perm) d = d := by
+      have h := pow_orderOf_eq_one cm.perm
+      exact congr_fun (congr_arg DFunLike.coe h) d
+    rw [this]; exact hd⟩
 
 end CombMap
 

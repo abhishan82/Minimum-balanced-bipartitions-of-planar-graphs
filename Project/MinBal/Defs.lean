@@ -71,6 +71,12 @@ def IsBiconnected {V : Type*} [Fintype V] (G : SimpleGraph V) : Prop :=
   G.Connected ∧
   (Fintype.card V = 2 ∨ ∀ v : V, (G.induce ({w : V | w ≠ v})).Connected)
 
+/-! ## Cut vertices -/
+
+/-- `v` is a cut vertex of `G` if `G` is connected and removing `v` disconnects it. -/
+def IsCutVertex {V : Type*} [Fintype V] (G : SimpleGraph V) (v : V) : Prop :=
+  G.Connected ∧ ¬(G.induce ({w : V | w ≠ v})).Connected
+
 /-! ## Blocks -/
 
 /-- `S` induces a block of `G` if `G.induce S` is biconnected and maximal with this property. -/

@@ -1,6 +1,7 @@
 import Project.Example
 import Project.Foundations.CombMap
 import Project.Foundations.PlaneGraph
+import Project.Foundations.BlockCutTree
 import Project.MinBal.Defs
 import Project.MinBal.PlaneGraph
 import Project.MinBal.Prop21
