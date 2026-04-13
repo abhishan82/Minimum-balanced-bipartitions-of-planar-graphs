@@ -39,13 +39,24 @@ def HasNT (G : SimpleGraph V) (S : Finset V) : Prop :=
 noncomputable def partBlockCount (G : SimpleGraph V) (S : Finset V) : ℕ :=
   blockCount (G.induce (↑S : Set V))
 
+/-- Any connected induced subgraph with ≥ 2 vertices of a near-triangulation admits a
+    near-triangulation structure. Uses `NearTriangulation.toConcrete` to obtain the concrete
+    plane graph, then `ConcretePlaneNT.induce` for the induced triangulation, then
+    `ConcretePlaneNT.toNearTriangulation` to recover the abstract structure. -/
+theorem hasNT_of_nt_induce (NT : NearTriangulation G) (S : Finset V)
+    (hconn : (G.induce (↑S : Set V)).Connected) (h2 : 2 ≤ S.card) :
+    HasNT G S :=
+  ⟨(NT.toConcrete.induce S hconn h2).toNearTriangulation⟩
+
 /-! ## K₂ helpers -/
 
+omit [Fintype V] in
 /-- Helper: Fintype.card of the subtype of a Finset coercion equals the Finset cardinality. -/
 private lemma card_set_coe_finset (s : Finset V) :
     Fintype.card ↥(↑s : Set V) = s.card := by
   rw [← Set.toFinset_card, Finset.toFinset_coe]
 
+omit [Fintype V] in
 /-- K₂ (two adjacent vertices) is biconnected. -/
 lemma K2_isBiconnected {u v : V} (huv : G.Adj u v) :
     IsBiconnected (G.induce (↑({u, v} : Finset V) : Set V)) := by
@@ -55,6 +66,7 @@ lemma K2_isBiconnected {u v : V} (huv : G.Adj u v) :
     rw [this]; exact SimpleGraph.induce_pair_connected_of_adj huv
   exact ⟨hconn, Or.inl (by rw [card_set_coe_finset, Finset.card_pair hne])⟩
 
+omit [Fintype V] in
 /-- Two adjacent distinct vertices admit a near-triangulation (K₂ structure). -/
 lemma K2_hasNT {u v : V} (huv : G.Adj u v) : HasNT G {u, v} := by
   have hne : u ≠ v := G.ne_of_adj huv
@@ -133,12 +145,90 @@ lemma K2_hasNT {u v : V} (huv : G.Adj u v) : HasNT G {u, v} := by
 
 /-! ## Lemma 3.5 (partition refinement) — stated before 3.1 and 3.3 which both use it -/
 
-/-- **Axiom (plane graph vertex move).**
-    The key planarity fact underlying Lemma 3.5: given any NT-bipartition with
-    |V₂| > |avoid|, there is a vertex in V₂ \ avoid that can be moved to V₁
-    preserving NT and biconnectivity on both sides, increasing block count by at most 1.
-    This will be proved from a concrete combinatorial-map model in a future development. -/
-axiom nt_vertex_move
+/-- **Axiom (plane graph good vertex — existence, two neighbors, and V₂ biconnectivity).**
+    The key planarity content: given an NT-bipartition with |V₂| > |avoid|,
+    the planar boundary between V₁ and V₂ contains a vertex v ∈ V₂ \ avoid
+    with two distinct V₁-neighbors such that G[V₂ \ {v}] is biconnected.
+    Biconnectivity of G[V₁ ∪ {v}] is then derived combinatorially via
+    `biconn_add_vertex` (no planarity needed for that half). -/
+axiom nt_good_vertex_exists
+    {V : Type*} [Fintype V] {G : SimpleGraph V}
+    (T      : Triangulation G)
+    (bp     : Bipartition V)
+    (avoid  : Finset V)
+    (havoid : avoid ⊆ bp.V₂)
+    (hV₁NT  : HasNT G bp.V₁)
+    (hV₁bc  : IsBiconnected (G.induce (↑bp.V₁ : Set V)))
+    (hV₂NT  : HasNT G bp.V₂)
+    (hV₂    : avoid.card < bp.V₂.card) :
+    ∃ v : V, v ∈ bp.V₂ ∧ v ∉ avoid ∧
+      ∃ u₁ u₂ : V, u₁ ∈ bp.V₁ ∧ u₂ ∈ bp.V₁ ∧ u₁ ≠ u₂ ∧
+        G.Adj v u₁ ∧ G.Adj v u₂ ∧
+        IsBiconnected (G.induce (↑(bp.V₂ \ {v}) : Set V))
+
+/-- **Good move exists** (derived from `nt_good_vertex_exists` + `biconn_add_vertex`).
+    The biconnectivity of G[V₁ ∪ {v}] follows combinatorially from v having two
+    distinct V₁-neighbors in an already-biconnected G[V₁]. -/
+theorem nt_good_move_exists
+    {V : Type*} [Fintype V] {G : SimpleGraph V}
+    (T      : Triangulation G)
+    (bp     : Bipartition V)
+    (avoid  : Finset V)
+    (havoid : avoid ⊆ bp.V₂)
+    (hV₁NT  : HasNT G bp.V₁)
+    (hV₁bc  : IsBiconnected (G.induce (↑bp.V₁ : Set V)))
+    (hV₂NT  : HasNT G bp.V₂)
+    (hV₂    : avoid.card < bp.V₂.card) :
+    ∃ v : V, v ∈ bp.V₂ ∧ v ∉ avoid ∧
+      IsBiconnected (G.induce (↑(bp.V₁ ∪ {v}) : Set V)) ∧
+      IsBiconnected (G.induce (↑(bp.V₂ \ {v}) : Set V)) := by
+  obtain ⟨v, hvin, hnavoid, u₁, u₂, hu₁, hu₂, hne, hadj₁, hadj₂, hbc₂⟩ :=
+    nt_good_vertex_exists T bp avoid havoid hV₁NT hV₁bc hV₂NT hV₂
+  have hv_not_V₁ : v ∉ bp.V₁ := Finset.disjoint_right.mp bp.disjoint hvin
+  exact ⟨v, hvin, hnavoid,
+    biconn_add_vertex hV₁bc hv_not_V₁ hu₁ hu₂ hne hadj₁ hadj₂, hbc₂⟩
+
+/-- **Plane graph vertex move** (derived from `nt_good_move_exists`).
+    Block count bound follows from biconnectivity: both moved parts are biconnected
+    → each has exactly 1 block (`biconnected_blockCount_eq_one`), so
+    LHS = 1 + 1 = 2 ≤ 1 + 1 + 1 ≤ b(V₁) + b(V₂) + 1 = RHS. -/
+theorem nt_vertex_move_geo
+    {V : Type*} [Fintype V] {G : SimpleGraph V}
+    (T      : Triangulation G)
+    (bp     : Bipartition V)
+    (avoid  : Finset V)
+    (havoid : avoid ⊆ bp.V₂)
+    (hV₁NT  : HasNT G bp.V₁)
+    (hV₁bc  : IsBiconnected (G.induce (↑bp.V₁ : Set V)))
+    (hV₂NT  : HasNT G bp.V₂)
+    (hV₂    : avoid.card < bp.V₂.card) :
+    ∃ v : V, v ∈ bp.V₂ ∧ v ∉ avoid ∧
+      IsBiconnected (G.induce (↑(bp.V₁ ∪ {v}) : Set V)) ∧
+      IsBiconnected (G.induce (↑(bp.V₂ \ {v}) : Set V)) ∧
+      partBlockCount G (bp.V₁ ∪ {v}) + partBlockCount G (bp.V₂ \ {v}) ≤
+        partBlockCount G bp.V₁ + partBlockCount G bp.V₂ + 1 := by
+  obtain ⟨v, hvin, hnavoid, hbc₁, hbc₂⟩ :=
+    nt_good_move_exists T bp avoid havoid hV₁NT hV₁bc hV₂NT hV₂
+  refine ⟨v, hvin, hnavoid, hbc₁, hbc₂, ?_⟩
+  -- Both moved parts are biconnected → each has blockCount = 1.
+  have h1 : partBlockCount G (bp.V₁ ∪ {v}) = 1 := biconnected_blockCount_eq_one hbc₁
+  have h2 : partBlockCount G (bp.V₂ \ {v}) = 1 := biconnected_blockCount_eq_one hbc₂
+  -- Each original part has blockCount ≥ 1 (from HasNT.block_pos).
+  have h3 : 1 ≤ partBlockCount G bp.V₁ := hV₁NT.some.block_pos
+  have h4 : 1 ≤ partBlockCount G bp.V₂ := hV₂NT.some.block_pos
+  omega
+
+omit [Fintype V] in
+/-- Helper: `Fintype.card ↥(↑S : Set V) = S.card`. -/
+private lemma card_finset_coe (S : Finset V) :
+    Fintype.card ↥(↑S : Set V) = S.card := by
+  rw [← Set.toFinset_card, Finset.toFinset_coe]
+
+/-- **Plane graph vertex move** (Lemma 3.5 axiom — now a theorem).
+    Derives `HasNT` for both parts from biconnectivity via `hasNT_of_nt_induce`,
+    with the geometric core (existence of v, biconnectivity, block count) from
+    `nt_vertex_move_geo`. -/
+theorem nt_vertex_move
     {V : Type*} [Fintype V] {G : SimpleGraph V}
     (T      : Triangulation G)
     (bp     : Bipartition V)
@@ -154,7 +244,27 @@ axiom nt_vertex_move
       HasNT G (bp.V₂ \ {v}) ∧
       IsBiconnected (G.induce (↑(bp.V₂ \ {v}) : Set V)) ∧
       partBlockCount G (bp.V₁ ∪ {v}) + partBlockCount G (bp.V₂ \ {v}) ≤
-        partBlockCount G bp.V₁ + partBlockCount G bp.V₂ + 1
+        partBlockCount G bp.V₁ + partBlockCount G bp.V₂ + 1 := by
+  obtain ⟨v, hv_in, hv_nav, hbc₁, hbc₂, hblock⟩ :=
+    nt_vertex_move_geo T bp avoid havoid hV₁NT hV₁bc hV₂NT hV₂
+  -- v ∉ bp.V₁ by disjointness of the bipartition.
+  have hv_not_V₁ : v ∉ bp.V₁ := Finset.disjoint_right.mp bp.disjoint hv_in
+  -- |V₁ ∪ {v}| ≥ 2: since |V₁| ≥ 2 (from hV₁NT.two_verts) and v is new.
+  have hV₁'_card : 2 ≤ (bp.V₁ ∪ {v}).card := by
+    obtain ⟨NT₁⟩ := hV₁NT
+    have h2 : 2 ≤ bp.V₁.card := (card_finset_coe bp.V₁) ▸ NT₁.two_verts
+    rw [Finset.card_union_of_disjoint (Finset.disjoint_singleton_right.mpr hv_not_V₁),
+        Finset.card_singleton]
+    omega
+  -- |V₂ \ {v}| ≥ 2: from biconnectedness of G[V₂ \ {v}].
+  have hV₂'_card : 2 ≤ (bp.V₂ \ {v}).card := by
+    have h := isBiconnected_two_le_card hbc₂
+    rwa [card_finset_coe] at h
+  -- HasNT for both parts via hasNT_of_nt_induce applied to T (a NearTriangulation).
+  refine ⟨v, hv_in, hv_nav,
+    hasNT_of_nt_induce T.toNearTriangulation _ hbc₁.1 hV₁'_card, hbc₁,
+    hasNT_of_nt_induce T.toNearTriangulation _ hbc₂.1 hV₂'_card, hbc₂,
+    hblock⟩
 
 /-- **Lemma 3.5.**
     Given a bipartition with |V₂| > |avoid| (where avoid ⊆ V₂), there exists
@@ -177,7 +287,7 @@ theorem lemma_3_5
         HasNT G bp'.V₂ ∧ IsBiconnected (G.induce (↑bp'.V₂ : Set V)) ∧
         partBlockCount G bp'.V₁ + partBlockCount G bp'.V₂ ≤
           partBlockCount G bp.V₁ + partBlockCount G bp.V₂ + 1 := by
-  -- Get the good vertex from the planarity axiom.
+  -- Get the good vertex from the geo axiom (via nt_vertex_move).
   obtain ⟨v, hv_in, hv_not_avoid, hntV₁', hbcV₁', hntV₂', hbcV₂', hblock⟩ :=
     nt_vertex_move T bp avoid havoid hV₁NT hV₁bc hV₂NT hV₂
   -- v ∉ bp.V₁ by disjointness.

@@ -192,6 +192,65 @@ private theorem fintype_card_coe_eq (S : Finset V) :
     Fintype.card ↥(↑S : Set V) = S.card := by
   rw [← Set.toFinset_card, Finset.toFinset_coe]
 
+/-! ## Induced plane near-triangulation -/
+
+namespace ConcretePlaneNT
+
+/-- The PlaneGraph on `G[S]` induced from a `ConcretePlaneNT G`:
+    the rotation system comes from `CombMap.induce` and the Euler formula
+    from `CombMap.induce_euler`. -/
+noncomputable def inducePlaneGraph (cnt : ConcretePlaneNT G) (S : Finset V)
+    (hconn : (G.induce (↑S : Set V)).Connected) :
+    (G.induce (↑S : Set V)).PlaneGraph where
+  cmap  := cnt.pg.cmap.induce S
+  euler := by simpa using CombMap.induce_euler cnt.pg.cmap S hconn
+
+/-- **Axiom (induced triangulation data).**
+    A connected induced subgraph with ≥ 2 vertices of a `ConcretePlaneNT` inherits
+    the near-triangulation structure from the ambient plane embedding: an outer face,
+    triangular inner faces, the dart-to-vertex bijection per face, the face-set
+    cardinality equation, and at least one block.
+    Geometric content: the induced rotation system preserves planarity and the
+    near-triangulation property is inherited from the ambient embedding. -/
+axiom induceData (cnt : ConcretePlaneNT G) (S : Finset V)
+    (hconn : (G.induce (↑S : Set V)).Connected) (h2 : 2 ≤ S.card) :
+    ∃ (outerFace : (cnt.inducePlaneGraph S hconn).Face),
+      (∀ f : (cnt.inducePlaneGraph S hconn).Face, f ≠ outerFace →
+        dartCount (cnt.inducePlaneGraph S hconn) f = 3) ∧
+      (∀ f : (cnt.inducePlaneGraph S hconn).Face,
+        dartCount (cnt.inducePlaneGraph S hconn) f =
+        (faceVertSet (cnt.inducePlaneGraph S hconn) f).card) ∧
+      (Finset.univ.image (faceVertSet (cnt.inducePlaneGraph S hconn))).card =
+        (cnt.inducePlaneGraph S hconn).cmap.facePerm.cycleFactorsFinset.card ∧
+      1 ≤ blockCount (G.induce (↑S : Set V))
+
+/-- A connected induced subgraph with ≥ 2 vertices of a `ConcretePlaneNT` is itself
+    a `ConcretePlaneNT`. Uses `CombMap.induce` for the rotation system and
+    `induceData` for the geometric near-triangulation conditions.
+    `Classical.choose` is used since `ConcretePlaneNT` is a Type, not a Prop. -/
+noncomputable def induce (cnt : ConcretePlaneNT G) (S : Finset V)
+    (hconn : (G.induce (↑S : Set V)).Connected) (h2 : 2 ≤ S.card) :
+    ConcretePlaneNT (G.induce (↑S : Set V)) :=
+  let data := cnt.induceData S hconn h2
+  let spec := Classical.choose_spec data
+  { pg           := cnt.inducePlaneGraph S hconn
+    outerFace    := Classical.choose data
+    inner_tri    := spec.1
+    dart_eq_vert := spec.2.1
+    faceCount_eq := spec.2.2.1
+    connected    := hconn
+    two_verts    := by have h := fintype_card_coe_eq S; omega
+    block_pos    := spec.2.2.2 }
+
+end ConcretePlaneNT
+
+/-- **Axiom (realization).**
+    Every abstract `NearTriangulation G` is realizable as a `ConcretePlaneNT G`.
+    Geometric content: the abstract near-triangulation axioms characterize exactly those
+    graphs admitting a planar embedding as a near-triangulation (combinatorial-map model). -/
+axiom NearTriangulation.toConcrete {V : Type*} [Fintype V] {G : SimpleGraph V}
+    (NT : NearTriangulation G) : ConcretePlaneNT G
+
 /-- Derive the full cut-vertex decomposition from the geometric core axiom.
     - `2 ≤ Sᵢ.card` follows from `NTᵢ.two_verts` + `fintype_card_coe_eq`.
     - `S₁.card + S₂.card = n+1` follows from `Finset.card_union_add_card_inter` + partition.

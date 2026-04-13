@@ -18,6 +18,7 @@ variable {V : Type*} [Fintype V] [DecidableEq V]
 
 /-! ## Sym2 membership lemma for cross edges -/
 
+omit [DecidableEq V] in
 /-- An edge s(u,v) is a cross-edge iff (u ∈ V₁ ∧ v ∈ V₂) or (u ∈ V₂ ∧ v ∈ V₁). -/
 private lemma isCrossEdge_mk (bp : Bipartition V) (u v : V) :
     IsCrossEdge bp s(u, v) ↔
@@ -119,6 +120,7 @@ private lemma induce_edgeFinset_image (S : Finset V) :
       · exact SimpleGraph.induce_adj.mpr hadj
       · simp [Sym2.map_mk]
 
+omit [Fintype V] [DecidableEq V] in
 /-- Sym2.map Subtype.val is injective on induced edges. -/
 private lemma sym2Map_val_injOn (S : Finset V) :
     Set.InjOn (Sym2.map (Subtype.val : S → V))

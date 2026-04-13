@@ -55,10 +55,10 @@ variable {V : Type*} [Fintype V] {G : SimpleGraph V}
 
 /-- Convenient abbreviations. -/
 abbrev n (_ : NearTriangulation G) : ℕ := Fintype.card V
-abbrev e (NT : NearTriangulation G) : ℕ := G.edgeFinset.card
+abbrev e (_ : NearTriangulation G) : ℕ := G.edgeFinset.card
 abbrev f (NT : NearTriangulation G) : ℕ := NT.faces.card
 abbrev i (NT : NearTriangulation G) : ℕ := internalVertCount NT.outer
-abbrev b (NT : NearTriangulation G) : ℕ := blockCount G
+abbrev b (_ : NearTriangulation G) : ℕ := blockCount G
 
 /-- The face count is positive (the outer face is present). -/
 lemma f_pos (NT : NearTriangulation G) : 0 < NT.f :=

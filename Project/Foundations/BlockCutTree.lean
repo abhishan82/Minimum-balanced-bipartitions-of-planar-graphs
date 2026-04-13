@@ -118,7 +118,7 @@ private lemma IsBiconnected.remove_connected
 
 omit [Fintype V] in
 /-- Helper: `induce_union_connected` restated with Finset coercions. -/
-private lemma induce_union_conn {S₁ S₂ : Finset V}
+lemma induce_union_conn {S₁ S₂ : Finset V}
     (h₁ : (G.induce (↑S₁ : Set V)).Preconnected)
     (h₂ : (G.induce (↑S₂ : Set V)).Preconnected)
     (hne : (S₁ ∩ S₂).Nonempty) :
@@ -249,6 +249,166 @@ theorem multiblock_has_cut_vertex
   · -- B₁ ≠ Finset.univ, giving B₁ ⊊ Finset.univ.
     exact hB₁.2 Finset.univ
       (Finset.ssubset_iff_subset_ne.mpr ⟨Finset.subset_univ _, h⟩) hbc_univ
+
+/-! ## Block count of a biconnected graph -/
+
+/-- A biconnected graph has exactly one block (itself). -/
+theorem biconnected_blockCount_eq_one (hbc : IsBiconnected G) : blockCount G = 1 := by
+  -- G.induce ↑Finset.univ is biconnected (same proof pattern as multiblock_has_cut_vertex)
+  have hbc_univ : IsBiconnected (G.induce (↑(Finset.univ : Finset V) : Set V)) := by
+    refine ⟨?_, ?_⟩
+    · rw [Finset.coe_univ]; exact (SimpleGraph.induceUnivIso G).connected_iff.mpr hbc.1
+    · rcases hbc.2 with h2 | hconn
+      · left
+        have hcard : Fintype.card ↥(↑(Finset.univ : Finset V) : Set V) = Fintype.card V := by
+          rw [← Set.toFinset_card, Finset.toFinset_coe, Finset.card_univ]
+        omega
+      · right; intro ⟨w, hw⟩
+        rw [induce_sdiff_connected_iff Finset.univ ⟨w, hw⟩]
+        have hset : (↑(Finset.univ \ {w} : Finset V) : Set V) = {x : V | x ≠ w} := by
+          ext x; simp
+        rw [hset]; exact hconn w
+  -- Finset.univ is a block: biconnected + vacuously maximal (no proper superset exists)
+  have hIsBlock : IsBlock G Finset.univ :=
+    ⟨hbc_univ, fun S' hS' _ =>
+      hS'.ne (Finset.univ_subset_iff.mp hS'.subset).symm⟩
+  -- blockCount G ≥ 1
+  have hge : 1 ≤ blockCount G :=
+    Finset.card_pos.mpr ⟨Finset.univ, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hIsBlock⟩⟩
+  -- blockCount G ≤ 1: any two distinct blocks lead to contradiction with maximality
+  have hle : blockCount G ≤ 1 := by
+    by_contra hlt; push_neg at hlt
+    have hcard : 1 < (Finset.univ.filter (IsBlock G)).card := by unfold blockCount at hlt; omega
+    obtain ⟨B₁, hB₁mem, B₂, hB₂mem, hne⟩ := Finset.one_lt_card.mp hcard
+    have hB₁ := (Finset.mem_filter.mp hB₁mem).2
+    have hB₂ := (Finset.mem_filter.mp hB₂mem).2
+    rcases eq_or_ne B₁ Finset.univ with rfl | h₁
+    · exact hB₂.2 Finset.univ
+        (Finset.ssubset_iff_subset_ne.mpr ⟨Finset.subset_univ _, hne.symm⟩) hbc_univ
+    · exact hB₁.2 Finset.univ
+        (Finset.ssubset_iff_subset_ne.mpr ⟨Finset.subset_univ _, h₁⟩) hbc_univ
+  omega
+
+/-! ## Adding a vertex with two neighbors to a biconnected graph -/
+
+omit [Fintype V] in
+/-- Adding a vertex with ≥ 2 neighbors in a biconnected induced subgraph gives a
+    biconnected induced subgraph.  Purely combinatorial — no planarity needed. -/
+theorem biconn_add_vertex {S : Finset V} (hS : IsBiconnected (G.induce (↑S : Set V)))
+    {v : V} (hv : v ∉ S)
+    {u₁ u₂ : V} (hu₁ : u₁ ∈ S) (hu₂ : u₂ ∈ S) (hne : u₁ ≠ u₂)
+    (hadj₁ : G.Adj v u₁) (hadj₂ : G.Adj v u₂) :
+    IsBiconnected (G.induce (↑(S ∪ {v}) : Set V)) := by
+  -- Membership helpers
+  have hv_mem  : v  ∈ S ∪ {v} := Finset.mem_union_right _ (Finset.mem_singleton_self v)
+  have hu₁_mem : u₁ ∈ S ∪ {v} := Finset.mem_union_left _ hu₁
+  have hu₂_mem : u₂ ∈ S ∪ {v} := Finset.mem_union_left _ hu₂
+  -- Inclusion hom ι : G[S] →g G[S∪{v}]
+  let ι : G.induce (↑S : Set V) →g G.induce (↑(S ∪ {v}) : Set V) :=
+    { toFun    := fun x => ⟨x.val, Finset.mem_coe.mpr (Finset.mem_union_left _ (Finset.mem_coe.mp x.2))⟩
+      map_rel' := fun h => h }
+  -- Handy vertex names in G[S∪{v}]
+  let v'  : ↥(↑(S ∪ {v}) : Set V) := ⟨v,  Finset.mem_coe.mpr hv_mem⟩
+  let u₁' : ↥(↑(S ∪ {v}) : Set V) := ⟨u₁, Finset.mem_coe.mpr hu₁_mem⟩
+  -- Adjacency in G[S∪{v}]
+  have hadj₁' : (G.induce (↑(S ∪ {v}) : Set V)).Adj v' u₁' := hadj₁
+  -- ─── Connectivity ───────────────────────────────────────────────────────────
+  have hconn : (G.induce (↑(S ∪ {v}) : Set V)).Connected := by
+    rw [SimpleGraph.connected_iff_exists_forall_reachable]
+    refine ⟨v', fun ⟨b, hb⟩ => ?_⟩
+    have hb' : b ∈ S ∪ {v} := Finset.mem_coe.mp hb
+    have lift : ∀ x y : ↥(↑S : Set V),
+        (G.induce (↑S : Set V)).Reachable x y →
+        (G.induce (↑(S ∪ {v}) : Set V)).Reachable (ι x) (ι y) :=
+      fun x y h => h.map ι
+    have hvu₁ : (G.induce (↑(S ∪ {v}) : Set V)).Reachable v' u₁' := hadj₁'.reachable
+    rcases Finset.mem_union.mp hb' with hbS | hbv
+    · exact hvu₁.trans (lift ⟨u₁, Finset.mem_coe.mpr hu₁⟩ ⟨b, Finset.mem_coe.mpr hbS⟩
+        (hS.1.preconnected _ _))
+    · have hbv : b = v := Finset.mem_singleton.mp hbv; subst hbv
+      exact SimpleGraph.Reachable.refl _
+  refine ⟨hconn, ?_⟩
+  -- |S∪{v}| ≥ 3 since |S| ≥ 2 and v ∉ S
+  have hcard_S : 2 ≤ S.card := Finset.one_lt_card.mpr ⟨u₁, hu₁, u₂, hu₂, hne⟩
+  have hcard : 3 ≤ Fintype.card ↥(↑(S ∪ {v}) : Set V) := by
+    rw [← Set.toFinset_card, Finset.toFinset_coe,
+        Finset.card_union_of_disjoint (Finset.disjoint_singleton_right.mpr hv),
+        Finset.card_singleton]
+    omega
+  right
+  intro w
+  rw [induce_sdiff_connected_iff (S ∪ {v}) w]
+  by_cases hwv : w.val = v
+  · -- w = v: (S∪{v})\{v} = S
+    have hset : (S ∪ {v}) \ {w.val} = S := by
+      ext x
+      simp only [Finset.mem_sdiff, Finset.mem_union, Finset.mem_singleton, hwv]
+      constructor
+      · rintro ⟨haS | hav, hne'⟩
+        · exact haS
+        · exact absurd hav hne'
+      · intro hxS; exact ⟨Or.inl hxS, fun h => hv (h ▸ hxS)⟩
+    rw [hset]; exact hS.1
+  · -- w ∈ S: (S∪{v})\{w} = (S\{w}) ∪ {v}
+    have hwS : w.val ∈ S := by
+      have := Finset.mem_coe.mp w.2
+      rcases Finset.mem_union.mp this with h | h
+      · exact h
+      · exact absurd (Finset.mem_singleton.mp h) hwv
+    have hset : (S ∪ {v}) \ {w.val} = (S \ {w.val}) ∪ {v} := by
+      ext x
+      simp only [Finset.mem_sdiff, Finset.mem_union, Finset.mem_singleton]
+      constructor
+      · rintro ⟨haS | hav, hne'⟩
+        · exact Or.inl ⟨haS, hne'⟩
+        · exact Or.inr hav
+      · rintro (⟨hxS, hne'⟩ | hxv)
+        · exact ⟨Or.inl hxS, hne'⟩
+        · exact ⟨Or.inr hxv, fun h => hwv (h ▸ hxv)⟩
+    rw [hset]
+    -- v has ≥1 neighbor in S\{w}
+    have hfriend : ∃ u ∈ S \ {w.val}, G.Adj v u := by
+      rcases ne_or_eq u₁ w.val with h | rfl
+      · exact ⟨u₁, Finset.mem_sdiff.mpr ⟨hu₁, Finset.mem_singleton.not.mpr h⟩, hadj₁⟩
+      · exact ⟨u₂, Finset.mem_sdiff.mpr ⟨hu₂, Finset.mem_singleton.not.mpr (Ne.symm hne)⟩, hadj₂⟩
+    obtain ⟨u, hu_sdiff, hadj_vu⟩ := hfriend
+    -- G[S\{w}] is connected
+    have hSw_conn : (G.induce (↑(S \ {w.val}) : Set V)).Connected := by
+      rcases hS.2 with hcard2 | hconn_del
+      · -- |S| = 2: S\{w} is a singleton
+        have hScard : S.card = 2 := by rwa [← Set.toFinset_card, Finset.toFinset_coe] at hcard2
+        have hSw_card : (S \ {w.val}).card = 1 := by
+          rw [← Finset.erase_eq, Finset.card_erase_of_mem hwS, hScard]
+        obtain ⟨z, hz⟩ := Finset.card_eq_one.mp hSw_card
+        -- S\{w} = {z}: singleton, so trivially connected via reachability.
+        have hzS : z ∈ S \ {w.val} := by rw [hz]; exact Finset.mem_singleton_self z
+        rw [SimpleGraph.connected_iff_exists_forall_reachable]
+        exact ⟨⟨z, Finset.mem_coe.mpr hzS⟩, fun ⟨x, hx⟩ => by
+          have hxS : x ∈ S \ {w.val} := Finset.mem_coe.mp hx
+          have hxz : x = z := Finset.mem_singleton.mp (hz.symm.symm ▸ hxS)
+          subst hxz; exact SimpleGraph.Reachable.refl _⟩
+      · rw [← induce_sdiff_connected_iff S ⟨w.val, Finset.mem_coe.mpr hwS⟩]
+        exact hconn_del ⟨w.val, Finset.mem_coe.mpr hwS⟩
+    -- G[(S\{w}) ∪ {v}] is connected: v adj u ∈ S\{w}, route all via u then v.
+    let v'' : ↥(↑((S \ {w.val}) ∪ {v}) : Set V) :=
+      ⟨v, Finset.mem_coe.mpr (Finset.mem_union_right _ (Finset.mem_singleton_self v))⟩
+    have hu_mem_union : u ∈ (S \ {w.val}) ∪ {v} := Finset.mem_union_left _ hu_sdiff
+    let u'' : ↥(↑((S \ {w.val}) ∪ {v}) : Set V) := ⟨u, Finset.mem_coe.mpr hu_mem_union⟩
+    -- v adj u in the union graph (hadj_vu : G.Adj v u from hfriend)
+    have hvu'' : (G.induce (↑((S \ {w.val}) ∪ {v}) : Set V)).Adj v'' u'' := hadj_vu
+    let ι' : G.induce (↑(S \ {w.val}) : Set V) →g G.induce (↑((S \ {w.val}) ∪ {v}) : Set V) :=
+      { toFun    := fun x => ⟨x.val, Finset.mem_coe.mpr (Finset.mem_union_left _ (Finset.mem_coe.mp x.2))⟩
+        map_rel' := fun h => h }
+    have hvu''_reach : (G.induce (↑((S \ {w.val}) ∪ {v}) : Set V)).Reachable v'' u'' :=
+      hvu''.reachable
+    rw [SimpleGraph.connected_iff_exists_forall_reachable]
+    refine ⟨v'', fun ⟨b, hb⟩ => ?_⟩
+    have hb' : b ∈ (S \ {w.val}) ∪ {v} := Finset.mem_coe.mp hb
+    rcases Finset.mem_union.mp hb' with hbS | hbv
+    · exact hvu''_reach.trans ((hSw_conn.preconnected ⟨u, Finset.mem_coe.mpr hu_sdiff⟩
+          ⟨b, Finset.mem_coe.mpr hbS⟩).map ι')
+    · have hbv : b = v := Finset.mem_singleton.mp hbv; subst hbv
+      exact SimpleGraph.Reachable.refl _
 
 /-! ## Cut-vertex splitting: vertex and edge count equations -/
 
@@ -700,7 +860,7 @@ private lemma image_val_subtype_eq {S : Finset V} (B : Finset ↥(↑S : Set V))
 
 omit [Fintype V] in
 /-- Biconnected subgraph has ≥ 2 vertices. -/
-private lemma isBiconnected_two_le_card {α : Type*} [Fintype α] {H : SimpleGraph α}
+lemma isBiconnected_two_le_card {α : Type*} [Fintype α] {H : SimpleGraph α}
     (hH : IsBiconnected H) : 2 ≤ Fintype.card α := by
   rcases hH.2 with h2 | hnocut
   · omega
