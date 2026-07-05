@@ -41,9 +41,12 @@ structure ConcretePlaneNT (G : SimpleGraph V) where
                  pg.cmap.facePerm.cycleFactorsFinset.card
   connected    : G.Connected
   two_verts    : 2 ≤ Fintype.card V
-  block_pos    : 1 ≤ blockCount G
 
 namespace ConcretePlaneNT
+
+/-- A ConcretePlaneNT has at least one block: follows from connectivity + ≥ 2 vertices. -/
+theorem block_pos (cnt : ConcretePlaneNT G) : 1 ≤ blockCount G :=
+  one_le_blockCount_of_connected cnt.connected cnt.two_verts
 
 /-- Shorthand for the face count. -/
 private noncomputable def FC (cnt : ConcretePlaneNT G) : ℕ :=
@@ -221,8 +224,7 @@ axiom induceData (cnt : ConcretePlaneNT G) (S : Finset V)
         dartCount (cnt.inducePlaneGraph S hconn) f =
         (faceVertSet (cnt.inducePlaneGraph S hconn) f).card) ∧
       (Finset.univ.image (faceVertSet (cnt.inducePlaneGraph S hconn))).card =
-        (cnt.inducePlaneGraph S hconn).cmap.facePerm.cycleFactorsFinset.card ∧
-      1 ≤ blockCount (G.induce (↑S : Set V))
+        (cnt.inducePlaneGraph S hconn).cmap.facePerm.cycleFactorsFinset.card
 
 /-- A connected induced subgraph with ≥ 2 vertices of a `ConcretePlaneNT` is itself
     a `ConcretePlaneNT`. Uses `CombMap.induce` for the rotation system and
@@ -237,10 +239,9 @@ noncomputable def induce (cnt : ConcretePlaneNT G) (S : Finset V)
     outerFace    := Classical.choose data
     inner_tri    := spec.1
     dart_eq_vert := spec.2.1
-    faceCount_eq := spec.2.2.1
+    faceCount_eq := spec.2.2
     connected    := hconn
-    two_verts    := by have h := fintype_card_coe_eq S; omega
-    block_pos    := spec.2.2.2 }
+    two_verts    := by have h := fintype_card_coe_eq S; omega }
 
 end ConcretePlaneNT
 

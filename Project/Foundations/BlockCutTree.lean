@@ -250,7 +250,49 @@ theorem multiblock_has_cut_vertex
     exact hB₁.2 Finset.univ
       (Finset.ssubset_iff_subset_ne.mpr ⟨Finset.subset_univ _, h⟩) hbc_univ
 
-/-! ## Block count of a biconnected graph -/
+/-! ## Block count lower bounds -/
+
+/-- A connected graph on ≥ 2 vertices has at least one block.
+    Proof: take any edge {u,v} (exists by connectivity + |V| ≥ 2); G.induce ↑{u,v} is
+    biconnected (K₂). Take a maximal biconnected superset — it is a block. -/
+theorem one_le_blockCount_of_connected (hconn : G.Connected)
+    (h2 : 2 ≤ Fintype.card V) : 1 ≤ blockCount G := by
+  -- Get two distinct vertices u, v with G.Adj u v from connectivity.
+  haveI : Nontrivial V := Fintype.one_lt_card_iff_nontrivial.mp (by omega)
+  obtain ⟨u, _⟩ := (inferInstance : Nontrivial V).exists_pair_ne
+  obtain ⟨v, huv⟩ := hconn.preconnected.exists_adj_of_nontrivial u
+  -- {u, v} is biconnected (K₂): connected + card = 2 satisfies the def.
+  have hne : u ≠ v := huv.ne
+  have hbc_uv : IsBiconnected (G.induce (↑({u, v} : Finset V) : Set V)) := by
+    constructor
+    · -- Connected: use induce_pair_connected_of_adj
+      have : (↑({u, v} : Finset V) : Set V) = {u, v} := by
+        simp [Finset.coe_insert, Finset.coe_singleton]
+      rw [this]; exact SimpleGraph.induce_pair_connected_of_adj huv
+    · -- |{u,v}| = 2
+      left
+      have : Fintype.card ↥(↑({u, v} : Finset V) : Set V) = ({u, v} : Finset V).card := by
+        rw [← Set.toFinset_card, Finset.toFinset_coe]
+      rw [this, Finset.card_pair hne]
+  -- Consider all finsets S with G.induce ↑S biconnected.
+  let cands : Finset (Finset V) :=
+    Finset.univ.filter (fun S => {u, v} ⊆ S ∧ IsBiconnected (G.induce (↑S : Set V)))
+  have hcands_ne : cands.Nonempty :=
+    ⟨{u, v}, Finset.mem_filter.mpr ⟨Finset.mem_univ _, Finset.Subset.refl _, hbc_uv⟩⟩
+  -- Take a ⊆-maximal element.
+  obtain ⟨B, hBmax⟩ := cands.exists_maximal hcands_ne
+  have hBmem := hBmax.1
+  simp only [cands, Finset.mem_filter, Finset.mem_univ, true_and] at hBmem
+  -- B is a block.
+  have hIsBlock : IsBlock G B := by
+    refine ⟨hBmem.2, fun S' hS' hbc_S' => ?_⟩
+    -- S' ∈ cands since {u,v} ⊆ B ⊆ S' and G[S'] is biconnected.
+    have hS'mem : S' ∈ cands := Finset.mem_filter.mpr
+      ⟨Finset.mem_univ _, hBmem.1.trans hS'.subset, hbc_S'⟩
+    -- Maximality of B: B ⊆ S' → S' ⊆ B, contradicting S' being a strict superset.
+    have hS'_sub : S' ⊆ B := hBmax.2 hS'mem hS'.subset
+    exact absurd (hS'.subset.antisymm hS'_sub) (Finset.ssubset_iff_subset_ne.mp hS').2
+  exact Finset.card_pos.mpr ⟨B, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hIsBlock⟩⟩
 
 /-- A biconnected graph has exactly one block (itself). -/
 theorem biconnected_blockCount_eq_one (hbc : IsBiconnected G) : blockCount G = 1 := by
