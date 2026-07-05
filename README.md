@@ -1,212 +1,68 @@
-# Lean 4 Project Template
+# Minimum Balanced Bipartitions of Planar Triangulations — Lean 4
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-lightblue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Zulip : Topic](https://img.shields.io/badge/Zulip-Topic-%237E57C2.svg?logo=zulip&logoColor=white)](https://leanprover.zulipchat.com/#narrow/channel/113488-general/topic/Tutorial.3A.20Getting.20Started.20with.20Blueprint-Driven.20Projects)
-[![YouTube : Tutorial](https://img.shields.io/badge/YouTube-Tutorial-%23FF0000.svg?logo=youtube&logoColor=white)](https://youtu.be/KyuyTsLgkMY)
+[![Build Project](https://github.com/abhishan82/Minimum-balanced-bipartitions-of-planar-graphs/actions/workflows/build-project.yml/badge.svg)](https://github.com/abhishan82/Minimum-balanced-bipartitions-of-planar-graphs/actions/workflows/build-project.yml)
 
-This repository contains a template for blueprint-driven formalization projects in Lean 4.
+Formalization of [A. Shantanam, *Minimum balanced bipartitions of planar
+triangulations*, Discrete Mathematics 343 (2020) 111572], which confirms the
+folklore conjecture that every planar graph $G$ admits a minimum balanced
+bipartition $(V_1, V_2)$ with $e(V_1, V_2) \leq |V(G)|$.
 
-## Install Lean 4
+## Main results (formalized)
 
-Ensure that you have a functioning Lean 4 installation. If you do not, please follow
-the [Lean installation guide](https://leanprover-community.github.io/get_started.html).
+- `MinBal.main_theorem` (Theorem 1.1) — If $G$ is a plane triangulation, then
+  there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that both
+  $G[V_1]$ and $G[V_2]$ are connected near-triangulations, and the total
+  number of blocks in $G[V_1]$ and $G[V_2]$ exceeds the total number of
+  internal vertices by at most 2.
+- `MinBal.folklore_conjecture` — Every plane triangulation $G$ has a balanced
+  bipartition $(V_1, V_2)$ with $e(V_1, V_2) \leq |V(G)|$.
 
-## Use this Template
+Both are fully proved relative to the assumed results in the ledger below.
 
-To create a new repository using this template, ensure you are on the correct repository page
-([LeanProject](https://github.com/leanprover-community/LeanProject)) and then follow these steps:
+## Architecture
 
-1. Click the **Use this template** button located at the top right of the repository page.
-2. Click the **Create a new repository** button.
-3. Select the account or organization where you want to create it, choose a name for the new
-repository, and click the **Create repository** button.
+- `Project/Foundations/` — reusable graph-embedding infrastructure:
+  combinatorial maps (rotation systems), surface graphs with Euler
+  characteristic, planarity, block-cut trees. Rotation systems do not yet
+  exist in Mathlib; this layer is developed with eventual upstreaming in mind.
+- `Project/MinBal/` — an abstract `NearTriangulation` interface (Euler formula
+  and edge–face incidence as fields) and the combinatorial proof of the main
+  theorem on top of it.
 
-## Clone this Repository
+## Assumed results (axiom ledger)
 
-To clone this repository to your local machine, please refer to the relevant section of the
-GitHub documentation [here](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository).
+Deep geometric facts are stated precisely and assumed; everything else is
+proved. Buckets: (A) provable from Foundations — planned; (B) provable pure
+combinatorics — planned; (C) deep external geometry — assumed with citation.
 
-## Customize this Template
-
-To tailor this template to your specific project, follow these steps:
-
-1. If you don't have a Python environment, you can install one by following the instructions in the
-[Python installation guide](https://www.python.org/downloads/).
-1. Verify your Python installation by running:
-    ```bash
-    python3 --version
-    ```
-1. Verify your Pip installation by running:
-    ```bash
-    pip3 --version
-    ```
-1. Ensure your terminal is in the project directory by running the following command:
-    ```bash
-    cd path/to/your/project
-    ```
-1.	Execute the customization script by running:
-    ```bash
-    scripts/customize_template.py NewProject
-    ```
-    where `NewProject` must be replaced by the name of your project.
-
-The script [`customize_template.py`](scripts/customize_template.py) will automatically rename the
-project folder and update the necessary files and configurations to match the new project name.
-
-## Configure GitHub Pages
-
-To set up GitHub Pages for your repository, follow these steps:
-
-1. Go to the **Settings** tab of your repository.
-2. In the left sidebar, click on the **Pages** section.
-3. In the **Source** dropdown, select `GitHub Actions`.
-
-The workflow [`deploy-pages.yml`](.github/workflows/deploy-pages.yml) builds the Jekyll site in
-[`website`](website), runs the
-[`upstreaming-dashboard-action`](https://github.com/leanprover-community/upstreaming-dashboard-action),
-and deploys the result to GitHub Pages.
-
-## Repository Layout
-
-The template repository is organized as follows (listing the main folders and files):
-
-- [`.github`](.github) contains GitHub-specific configuration files and workflows.
-    - [`workflows`](.github/workflows) contains GitHub Actions workflow files.
-        - [`build-project.yml`](.github/workflows/build-project.yml) defines the workflow for building
-        the Lean project on pushes, pull requests, and manual triggers. This is a minimalistic build
-        workflow which is not necessary if you decide to generate a blueprint (see instructions below)
-        and can be manually disabled by clicking on the **Actions** tab, selecting **Build Project**
-        in the left sidebar, then clicking the horizontal triple dots (⋯) on the right,
-        and choosing **Disable workflow**.
-        - [`deploy-pages.yml`](.github/workflows/deploy-pages.yml) defines the workflow for building
-        and deploying the GitHub Pages site, including generation of the upstreaming dashboard.
-        - [`create-release.yml`](.github/workflows/create-release.yml): defines the workflow for creating a new Git tag and GitHub release when the `lean-toolchain` file is updated in the `main` branch. Ensure the following settings are configured under **Settings > Actions > General > Workflow permissions**: "Read and write permissions" and "Allow GitHub Actions to create and approve pull requests".
-        - [`update.yml`](.github/workflows/update.yml) is the dependency
-        update workflow to be triggered manually by default. [It's not documented yet, but it will be soon.]
-    - [`dependabot.yml`](.github/dependabot.yml) is the configuration file to automate CI dependency updates.
-- [`.vscode`](.vscode) contains Visual Studio Code configuration files
-    - [`extensions.json`](.vscode/extensions.json) recommends VS Code extensions for the project.
-    - [`settings.json`](.vscode/settings.json) defines the project-specific settings for VS Code.
-- [`Project`](Project) should contain the Lean code files.
-    - [`Mathlib`](Project/Mathlib) should contain `.lean` files with declarations missing from the
-    current version of Mathlib.
-    - [`Example.lean`](Project/Example.lean) is a sample Lean file.
-- [`scripts`](scripts) contains scripts to update Mathlib ensuring that the latest version is
-fetched and integrated into the development environment.
-- [`website`](website) contains the Jekyll files for the GitHub Pages homepage that displays the
-upstreaming dashboard.
-- [`.gitignore`](.gitignore) specifies files and folders to be ignored by Git.
-and environment.
-- [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) should contain the code of conduct for the project.
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) should provide the guidelines for contributing to the
-project.
-- [`lakefile.toml`](lakefile.toml) is the configuration file for the Lake build system used in
-Lean projects.
-- [`lean-toolchain`](lean-toolchain) specifies the Lean version and toolchain used for the project.
+| Declaration | File | Bucket | Notes |
+|---|---|---|---|
+| `induce_euler` | Foundations/CombMap.lean | A | Euler char of a CombMap restricted to a connected induced subgraph; provable by vertex/edge-deletion induction on `cycleFactorsFinset`, blocked only by a missing "cycle-merge" counting lemma, not by any external theorem. |
+| `concretePlaneNT_cut_vertex_decomp_geo` | MinBal/ConcreteNT.lean | A | Cut-vertex splits a `ConcretePlaneNT` into two sub-embeddings; derivable once `toConcrete`/`induceData` give the concrete rotation system, purely from its face structure. |
+| `induceData` | MinBal/ConcreteNT.lean | A | Induced-subgraph near-triangulation data (outer face, triangular inner faces, face count); a direct consequence of `induce_euler` in the same CombMap model. |
+| `NearTriangulation.toConcrete` | MinBal/ConcreteNT.lean | C | Representation theorem: every abstract near-triangulation (Euler formula + incidence identity) is realizable as a concrete rotation-system embedding. The converse-Euler / planar-realizability direction; Jackson–Yu-adjacent (J. Graph Theory 41 (2002) 138–150). |
+| `nt_good_vertex_exists` | MinBal/Lemmas.lean | A | Existence of a boundary vertex with two distinct neighbors in the other part (Lemma 3.5's planarity content); a face-walk argument on the concrete embedding once `toConcrete`/`induceData` are available. |
+| `sep_tri_bipartition` | MinBal/MainTheorem.lean | A | Geometric core of Prop. 4.1: a separating triangle's two-region decomposition, read off the concrete embedding's face structure. |
+| `deg1_sink_bipartition` | MinBal/MainTheorem.lean | A | Geometric core of Prop. 4.2 (degree-1 sink, ≥5 vertices); built from the concrete embedding plus 4-connectivity. |
+| `tiny_sink_bipartition` | MinBal/MainTheorem.lean | A | Geometric core of Prop. 4.3 (sink $\cong K_4$); same embedding-dependent construction, small case. |
+| `no_sep_tri_gives_sink` | MinBal/MainTheorem.lean | A/B? | Standard-tree decomposition producing a 4-connected sink when no balanced separating triangle exists. Likely reduces to well-founded induction on nested separating triangles (bucket B) once the standard tree is defined, but "separating triangle" is itself an embedding notion — not yet determined which side of the line it falls on. |
 
 ## Blueprint
 
-### 0. Selected Collaborative Projects
+Dependency graph and paper-to-Lean correspondence: blueprint site pending —
+see [Pages Deployment](#pages-deployment) below.
 
-- [Fermat's Last Theorem for Exponent 3](https://pitmonticone.github.io/FLT3/) by Riccardo Brasca et al.
-- [Polynomial Freiman-Ruzsa Conjecture](https://github.com/teorth/pfr) by Terence Tao et al.
-- [Fermat's Last Theorem](https://imperialcollegelondon.github.io/FLT/) by Kevin Buzzard et al.
-- [Carleson Operators on Doubling Metric Measure Spaces](http://florisvandoorn.com/carleson/) by Floris van Doorn et al.
-- [Bonn Collaborative Formalization Seminar Series in Analysis](https://github.com/fpvandoorn/BonnAnalysis) by Floris van Doorn et al.
-- [Prime Number Theorem and More](https://github.com/AlexKontorovich/PrimeNumberTheoremAnd) by Alex Kontorovich et al.
-- [Infinity Cosmos](https://github.com/emilyriehl/infinity-cosmos) by Emily Riehl et al.
-- [Analytic Number Theory Exponent Database](https://github.com/teorth/expdb) by Terence Tao et al.
-- [Groupoid Model of Homotopy Type Theory](https://github.com/sinhp/GroupoidModelofHoTTinLean4) by Sina Hazratpour et al.
-- [Equational Theories](https://github.com/teorth/equational_theories) by Terence Tao et al.
-- [Sphere Packing in 8 Dimensions](https://github.com/thefundamentaltheor3m/Sphere-Packing-Lean) by Maryna Viazovska et al.
+## Pages Deployment
 
-For more examples of completed and ongoing Lean projects and libraries, please
-see the [Lean Reservoir](https://reservoir.lean-lang.org).
+The blueprint/dashboard site is **not currently deployed**. GitHub Pages is
+not enabled on this repository, and the last several scheduled runs of
+[`deploy-pages.yml`](.github/workflows/deploy-pages.yml) have failed at the
+**Configure Pages** step — the standard symptom of Pages not being enabled.
+To fix: in repo **Settings → Pages**, set **Source** to `GitHub Actions`,
+then re-run the workflow.
 
-### 1. Install Dependencies
+## Author
 
-To install the necessary dependencies, follow the instructions in the
-[PyGraphViz installation guide](https://pygraphviz.github.io/documentation/stable/install.html).
-
-### 2. Install LeanBlueprint Package
-
-Assuming you have a properly configured Python environment, install LeanBlueprint by running:
-
-```bash
-pip install leanblueprint
-```
-
-If you have an existing installation of LeanBlueprint, you can upgrade to the latest version by
-running:
-
-```bash
-pip install -U leanblueprint
-```
-
-### 3. Configure Blueprint
-
-To set up the blueprint for your project, run:
-
-```bash
-leanblueprint new
-```
-
-Then, follow the prompts and answer the questions as you like, except for a few specific
-questions which should be answered as indicated below to ensure compatibility with this template.
-
-Respond affirmatively with `y` to the following prompt:
-
-```console
-Proceed with blueprint creation? [y/n]
-```
-
-Respond affirmatively with `y` to the following prompt:
-
-```console
-Modify lakefile and lake-manifest to allow checking declarations exist? [y/n] (y)
-```
-
-Respond negatively with `n` to the following prompt:
-
-```console
-Modify lakefile and lake-manifest to allow building the documentation? [y/n] (y):
-```
-
-If you want to generate a Jekyll-based home page for the project, respond
-affirmatively with `y` to the following prompt:
-
-```console
-Do you want to create a home page for the project, with links to the blueprint, the API documentation and the repository? [y/n]:
-```
-
-Respond affirmatively with `y` to the following prompt:
-
-```console
-Configure continuous integration to compile blueprint? [y/n] (y):
-```
-
-For more details about the LeanBlueprint package and its commands, please refer to its
-[documentation](https://github.com/PatrickMassot/leanblueprint/tree/master#starting-a-blueprint).
-
-After configuring the blueprint, please wait for the GitHub Action workflow to finish.
-You can keep track of the progress in the **Actions** tab of your repository.
-
-## Selected Projects Using this Template
-
-If you have used this template to create your own Lean project and would like to share it with the community, please consider opening a [PR](https://github.com/leanprover-community/LeanProject/pulls) to add your project to this list:
-
-- [Infinity Cosmos](https://github.com/emilyriehl/infinity-cosmos) by Emily Riehl et al.
-- [Analytic Number Theory Exponent Database](https://github.com/teorth/expdb) by Terence Tao et al.
-- [Equational Theories](https://github.com/teorth/equational_theories) by Terence Tao et al.
-- [Groupoid Model of Homotopy Type Theory](https://github.com/sinhp/GroupoidModelofHoTTinLean4) by Sina Hazratpour et al.
-- [Soundness of FRI](https://github.com/BoltonBailey/FRISoundness) by Bolton Bailey et al.
-- [Weil's Converse Theorem](https://github.com/CBirkbeck/WeilConverse) by Chris Birkbeck et al.
-- [Proofs from THE BOOK](https://github.com/mo271/FormalBook) by Moritz Firsching et al.
-- [Automata Theory](https://github.com/shetzl/autth) by Stefan Hetzl et al.
-- [Dirichlet Nonvanishing](https://github.com/CBirkbeck/DirichletNonvanishing) by Chris Birkbeck et al.
-- [Seymour's Decomposition Theorem](https://github.com/Ivan-Sergeyev/seymour) by Ivan Sergeyev et al.
-- [Spectral Theorem](https://github.com/oliver-butterley/SpectralThm) by Oliver Butterley and Yoh Tanimoto.
-- [NeuralNetworks](https://github.com/or4nge19/NeuralNetworks) by Matteo Cipollina.
-- [ABC Exceptions](https://github.com/b-mehta/ABC-Exceptions) by Bhavik Mehta et al.
-- [Sphere Packing in 8 Dimensions](https://github.com/thefundamentaltheor3m/Sphere-Packing-Lean) by Maryna Viazovska et al.
-- [LeanBridge](https://github.com/CBirkbeck/LeanBridge) by Chris Birkbeck et al.
+Abhinav Shantanam (paper and formalization). Formalization assisted by LLM
+coding agents; every proof reviewed by the author.
