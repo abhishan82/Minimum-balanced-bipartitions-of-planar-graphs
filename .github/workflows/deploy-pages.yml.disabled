@@ -1,3 +1,5 @@
+# Disabled: raced blueprint.yml for the Pages root. Upstreaming dashboard
+# parked; revisit if wanted at a subpath.
 name: Build and Deploy Pages
 
 on:
