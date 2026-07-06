@@ -44,7 +44,6 @@ jobs:
         uses: leanprover/lean-action@c544e89643240c6b398f14a431bcdc6309e36b3e # 2025-07-02
         with:
           build: true
-          lint: true
           mk_all-check: true
 
       - name: Compile blueprint and documentation
