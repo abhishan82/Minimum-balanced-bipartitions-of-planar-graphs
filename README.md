@@ -50,17 +50,11 @@ combinatorics — planned; (C) deep external geometry — assumed with citation.
 
 ## Blueprint
 
-Dependency graph and paper-to-Lean correspondence: blueprint site pending —
-see [Pages Deployment](#pages-deployment) below.
-
-## Pages Deployment
-
-The blueprint/dashboard site is **not currently deployed**. GitHub Pages is
-not enabled on this repository, and the last several scheduled runs of
-[`deploy-pages.yml`](.github/workflows/deploy-pages.yml) have failed at the
-**Configure Pages** step — the standard symptom of Pages not being enabled.
-To fix: in repo **Settings → Pages**, set **Source** to `GitHub Actions`,
-then re-run the workflow.
+Dependency graph and paper-to-Lean correspondence:
+[abhishan82.github.io/Minimum-balanced-bipartitions-of-planar-graphs](https://abhishan82.github.io/Minimum-balanced-bipartitions-of-planar-graphs/)
+([PDF](https://abhishan82.github.io/Minimum-balanced-bipartitions-of-planar-graphs/blueprint.pdf),
+[dependency graph](https://abhishan82.github.io/Minimum-balanced-bipartitions-of-planar-graphs/blueprint/dep_graph_document.html),
+[API docs](https://abhishan82.github.io/Minimum-balanced-bipartitions-of-planar-graphs/docs/)).
 
 ## Author
 
