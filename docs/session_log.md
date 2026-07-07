@@ -91,3 +91,42 @@ with no `::error::`-style annotation) recurs for any raw shell/Docker-
 container step failure — worth remembering that *reproducing locally*
 beats waiting on CI-log access when the workflow step itself isn't a
 GitHub-native action.
+
+### Update (same day): blueprint site deployed successfully
+
+**Done:**
+- `blueprint.yml` run `28863890479` (commit `fae3db0`) succeeded end to end
+  for the first time ever: build, lint-free compile, `mk_all` check, and
+  `docgen-action`'s blueprint/API-doc compile-and-deploy step all passed.
+- Confirmed deploy target: no `gh-pages` branch exists on the repo (only
+  `main`), so `docgen-action` deployed via the GitHub Actions Pages
+  deployment API internally (same mechanism as `actions/deploy-pages`), not
+  a branch push.
+- Verified the live site thoroughly, not just a 200 on the root: homepage
+  (`docgen-action`'s generated landing page, title "minbal_pl | by
+  abhishan82", links to blueprint/PDF/docs), `blueprint/` (web version,
+  confirmed real Theorem/Proposition/Lemma/Corollary content, not a
+  placeholder), `blueprint.pdf`, `blueprint/dep_graph_document.html`, and
+  `docs/` (API docs) — all return HTTP 200 with real content.
+- Updated `README.md`'s Blueprint section with the live links and removed
+  the now-stale "Pages Deployment" troubleshooting section (Pages is
+  enabled and working). Committed (`77bea1c`) and pushed.
+
+**Found:** polling this run hit the unauthenticated GitHub REST API's
+60-req/hour rate limit repeatedly during the ~35-minute wait for
+`docgen-action` to finish (texlive-full container pull + LaTeX + doc-gen4
+API docs build). Recovered each time by backing off and checking
+`/rate_limit` (which is itself exempt from the limit) before resuming.
+Also worth noting: comparing job/step `started_at` timestamps against a
+fresh `Date:` response header is a reliable way to gauge real elapsed CI
+time — this local sandbox's own clock was unreliable for that purpose
+earlier in the session, and rate-limit-reset-cycle counting turned out to
+be an unreliable proxy for elapsed time too (both were tried and discarded
+as gauges before landing on the timestamp-diff approach).
+
+**Blocked:** nothing outstanding from this task. The full CI pipeline
+(`build-project.yml`, `blueprint.yml`) is green, and the blueprint site is
+live at
+https://abhishan82.github.io/Minimum-balanced-bipartitions-of-planar-graphs/.
+
+**Current state:** `main` at `77bea1c`.
