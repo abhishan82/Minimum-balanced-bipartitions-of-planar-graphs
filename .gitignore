@@ -1,5 +1,8 @@
 ## macOS
 .DS_Store
+## Local scratch
+# local scratch — mk_all would demand importing it if tracked
+Project/FormalizationPlan.lean
 ## Lake
 .lake/*
 .cache/*
