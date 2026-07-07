@@ -57,3 +57,37 @@ pushed at the end of every session (see CLAUDE.md).
 GitHub Pages source (Settings → Pages → Source: GitHub Actions) are set by
 the author. `deploy-pages.yml.disabled` parked, not deleted, in case the
 dashboard is wanted later at a subpath.
+
+### Update (same day): docgen exit-255 resolved
+
+**Done:**
+- Reproduced the `docgen-action` failure locally instead of guessing:
+  ran `leanblueprint pdf` (and, gated on that passing, `leanblueprint web`)
+  from the repo root with a local MiKTeX/leanblueprint install.
+- First local run hit `! Package fontspec Error: The font
+  "latinmodern-math" cannot be found`, despite the `lm-math` package being
+  installed (`mpm --list`). Diagnosed as a stale local MiKTeX font-name
+  database, not a repo bug — confirmed by running `initexmf --update-fndb`
+  and retrying, which got past that error entirely.
+- With the font-cache red herring cleared, hit the real bug: `! Missing $
+  inserted` at `\input{content}` in `print.tex`. Root cause: `\title{minbal_pl}`
+  in both `blueprint/src/print.tex` and `blueprint/src/web.tex` has an
+  unescaped underscore, which is math-mode-only syntax in LaTeX text mode.
+  `\title` defers typesetting to `\maketitle`, so the error only surfaced
+  later and got misattributed by the TeX log to the next line read — which
+  is exactly why CI's Checks-API annotation was a content-free "exit code
+  255" with nothing more specific to go on.
+- Fixed by escaping to `\title{minbal\_pl}` in both files. Verified locally:
+  `leanblueprint pdf` now exits 0 (produces a real 4-page `print.pdf`, only
+  a harmless overfull-hbox warning) and `leanblueprint web` now exits 0
+  (produces real `index.html`/`dep_graph_document.html` output). Some
+  Windows-local tool warnings (`gswin32c`, `pdf2svg` not found) appeared but
+  did not block either command — non-fatal fallback path, not a repo issue.
+- Committed (`0fdce7b`) and pushed; resuming the CI watch loop on the newly
+  triggered `blueprint.yml` run.
+
+**Found:** the generic, content-free CI failure mode (bare "exit code 255"
+with no `::error::`-style annotation) recurs for any raw shell/Docker-
+container step failure — worth remembering that *reproducing locally*
+beats waiting on CI-log access when the workflow step itself isn't a
+GitHub-native action.
