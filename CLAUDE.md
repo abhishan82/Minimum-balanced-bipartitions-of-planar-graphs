@@ -50,8 +50,13 @@ results in the README ledger.
 
 ## Current milestone
 
-Convert the 9 remaining `axiom` declarations to sorried theorems (statements
-byte-identical), tag each with its ledger bucket (A: provable from
-Foundations; B: provable combinatorics, deferred; C: deep external, cite —
-Jackson–Yu, J. Graph Theory 41 (2002) 138–150), keep README ledger in sync.
-Then: weekly-lemma pipeline on bucket-A items, starting with `induce_euler`.
+Done (2026-07-08): all 9 `axiom` declarations converted to sorried theorems
+(byte-identical statements), tagged with ledger buckets (8× A, 1× C —
+`NearTriangulation.toConcrete`, cite Jackson–Yu), README ledger synced,
+`\lean{}` tags added to the 10 main blueprint nodes so `checkdecls` guards
+the repo like the sibling.
+
+Now: weekly-lemma pipeline on bucket-A items, starting with `induce_euler`
+(Foundations/CombMap.lean) — provable by vertex/edge-deletion induction on
+`cycleFactorsFinset`, blocked only by a missing "cycle-merge" counting
+lemma, not by any external theorem.

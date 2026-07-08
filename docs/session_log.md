@@ -130,3 +130,55 @@ live at
 https://abhishan82.github.io/Minimum-balanced-bipartitions-of-planar-graphs/.
 
 **Current state:** `main` at `77bea1c`.
+
+---
+
+## 2026-07-08
+
+**Done:**
+- Converted all 9 `axiom` declarations to `theorem ... := sorry` (one
+  `noncomputable def ... := sorry` for `NearTriangulation.toConcrete`, since
+  `theorem` requires a Prop-valued type and `ConcretePlaneNT G` is a
+  structure) per CLAUDE.md's non-negotiable convention. Statements kept
+  byte-identical; doc comments extended with the ledger bucket (8× A, 1× C)
+  and the reason assumed. Verified: 0 axioms, 9 sorries, `lake build` green
+  with exactly 9 "declaration uses `sorry`" warnings.
+- Synced the README ledger: renamed "axiom ledger" to "sorry ledger",
+  finalized `no_sep_tri_gives_sink` from the provisional "A/B?" to "A"
+  (embedding notion, same reasoning as the other Section 4 cases), expanded
+  the `toConcrete` citation to the full Jackson–Yu reference.
+- Added `\lean{}` tags to 10 blueprint nodes (main_theorem, prop_2_1,
+  cor_2_2_concrete, lemma_3_1/3_3/3_5, prop_4_1/4_2/4_3,
+  folklore_conjecture), matching the sibling repo
+  Pancyclicity-in-4-connected-planar-graphs' pattern. Wrapped the
+  folklore-conjecture closing sentence in its own `\begin{corollary}` so it
+  has a node to attach `\lean{}` to. Left `cor:conj_4con` untagged — no
+  standalone Lean declaration corresponds to it. Regenerated and committed
+  `blueprint/lean_decls` so `checkdecls` now actually validates something
+  (was an empty file before).
+- Verified locally, each command named and its exit code checked
+  individually: `lake build` (0), `leanblueprint pdf` (0, real 4-page PDF),
+  `leanblueprint web` (0, real HTML output), `lake exe checkdecls
+  blueprint/lean_decls` (0, all 10 names resolve).
+- Found and fixed a second concurrency bug while watching CI: `blueprint.yml`
+  and `build-project.yml` both used the bare `${{ github.ref }}` group, so
+  every push had them cancel each other (build-project.yml also triggers on
+  `*.lean` pushes) — this is exactly the gotcha already logged in CLAUDE.md's
+  CI notes, just not yet applied to the workflow files. Prefixed each group
+  with its workflow name (`blueprint-`/`build-`).
+- Pushed in 4 commits (axiom conversion, README sync, blueprint tags,
+  concurrency fix — after rebasing once on 3 more dependabot merges).
+  Watched `blueprint.yml` run `28942582104` to completion: **success**, all
+  steps green, ~37 minutes total (docgen-action step alone took a while,
+  consistent with a `texlive-full` container pull + doc-gen4 API doc build).
+
+**Found:** nothing new required fixing beyond the concurrency scoping —
+the `\lean{}` tags resolved cleanly on the first CI attempt after passing
+locally, so no checkdecls-in-CI-only discrepancy this time.
+
+**Blocked:** nothing outstanding. `lake build` green, CI green, blueprint
+site reflects the new content.
+
+**Current state:** `main` at `6e07518` before this log entry; the
+CLAUDE.md milestone update and this entry are committed together as the
+closing commit of the session.
