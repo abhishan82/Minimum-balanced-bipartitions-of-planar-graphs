@@ -13,6 +13,7 @@ A minimum balanced bipartition of $G$ is a balanced bipartition $(V_1, V_2)$ of 
 
 \begin{theorem}[Main Theorem]
 \label{thm:main}
+\lean{MinBal.main_theorem}
 If $G$ is a plane triangulation, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that both $G[V_1]$ and $G[V_2]$ are connected near-triangulations, and the total number of blocks in $G[V_1]$ and $G[V_2]$ exceeds the total number of internal vertices by at most 2.
 \end{theorem}
 
@@ -28,11 +29,13 @@ Any vertex of $G$ not lying on the boundary of the infinite face of $G$ is said 
 
 \begin{proposition}[Edge Count in Near-Triangulation]
 \label{prop:edges_cpnt}
+\lean{MinBal.prop_2_1}
 If $G$ is a connected near-triangulation with $|V(G)| \geq 2$, $b$ blocks, and $i$ internal vertices, then $|E(G)| = 2|V(G)|-2+i-b$.
 \end{proposition}
 
 \begin{corollary}[Edge Cut in Bipartition]
 \label{cor:cut_cpnt}
+\lean{MinBal.cor_2_2_concrete}
 If $G$ is a plane triangulation with $|V(G)| \geq 4$, and $(V_1, V_2)$ is a bipartition of $V(G)$ with $|V_1|, |V_2| \geq 2$ such that both $G[V_1], G[V_2]$ are near-triangulations together containing a total of $b$ blocks and $i$ internal vertices, then $e(V_1, V_2) = |V(G)| + b - i - 2$.
 \end{corollary}
 
@@ -40,6 +43,7 @@ If $G$ is a plane triangulation with $|V(G)| \geq 4$, and $(V_1, V_2)$ is a bipa
 
 \begin{lemma}[4-Connected Partitioning]
 \label{lem:4con}
+\lean{MinBal.lemma_3_1}
 If $G$ is a 4-connected plane triangulation or $K_4$, and $e_1, e_2$ are disjoint edges in $G$, then for every $2 \leq k \leq |V(G)|-2$ there exists a bipartition $(V_1, V_2)$ of $V(G)$ such that:
 \begin{enumerate}
 \item $|V_1| = k, |V_2| = |V(G)|-k$,
@@ -55,6 +59,7 @@ If $G$ is a 4-connected planar graph or $G \subseteq K_4$, then for every $1 \le
 
 \begin{lemma}[3-Connected Partitioning]
 \label{lem:3con1}
+\lean{MinBal.lemma_3_3}
 If $G$ is a plane triangulation and the vertex-set ${a, b, c} \subseteq V(G)$ bounds the infinite face of $G$, then for every $2 \leq k \leq |V(G)|-1$ there exists a bipartition $(V_1, V_2)$ of $V(G)$ such that:
 \begin{enumerate}
 \item $|V_1| = k, |V_2| = |V(G)|-k$,
@@ -66,6 +71,7 @@ If $G$ is a plane triangulation and the vertex-set ${a, b, c} \subseteq V(G)$ bo
 
 \begin{lemma}[Partition Refinement]
 \label{lem:3con2}
+\lean{MinBal.lemma_3_5}
 Let $G$ be a plane triangulation such that $|V(G)| \geq 4$ and the vertex-set ${a, b, c} \subset V(G)$ bounds the infinite face of $G$. If $(V_1, V_2)$ is a bipartition of $V(G)$ such that ${a, b} \subseteq V_1, c \in V_2$, $|V_2| \geq 2$, and both $G[V_1]$ and $G[V_2]$ are connected near-triangulations, then there exists a vertex $v \in V_2-c$ such that both $G[V_1 \cup v]$ and $G[V_2-v]$ are connected near-triangulations, and the total number of blocks in $G[V_1 \cup v]$ and $G[V_2-v]$ exceeds that in $G[V_1]$ and $G[V_2]$ by at most 1.
 \end{lemma}
 
@@ -73,16 +79,19 @@ Let $G$ be a plane triangulation such that $|V(G)| \geq 4$ and the vertex-set ${
 
 \begin{proposition}[Warmup Case]
 \label{prop:warmup}
+\lean{MinBal.prop_4_1}
 If $G$ is a plane triangulation with $|V(G)|=n$ and $T \subseteq G$ is a separating triangle such that each of the two components of $G-V(T)$ contains at least $\lfloor \frac{n}{2} \rfloor-1$ vertices, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that $G[V_1]$ is a biconnected near-triangulation and $G[V_2]$ is a connected near-triangulation with the number of blocks exceeding the total number of internal vertices in $G[V_1]$ and $G[V_2]$ by at most 1.
 \end{proposition}
 
 \begin{proposition}[Sink Degree Case]
 \label{prop:onedegsink}
+\lean{MinBal.prop_4_2}
 If $G$ is a plane triangulation with $|V(G)|=n$ such that the sink in its directed std-tree has degree 1, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that both $V_1$ and $V_2$ induce biconnected near-triangulations.
 \end{proposition}
 
 \begin{proposition}[Sink with 4 Vertices]
 \label{prop:sonly4}
+\lean{MinBal.prop_4_3}
 If $G$ is a plane triangulation with $|V(G)|=n$ such that the sink triangulation $S$ of $G$ contains exactly 4 vertices, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that both $V_1$ and $V_2$ induce connected near-triangulations, and the total number of blocks in $G[V_1]$ and $G[V_2]$ exceeds the total number of internal vertices by at most 2.
 \end{proposition}
 
@@ -117,4 +126,9 @@ The main theorem \ref{thm:main} is proven by:
 \item Verifying that the constructed bipartition satisfies all required properties
 \end{itemize}
 
+\begin{corollary}[Folklore Conjecture]
+\label{cor:folklore}
+\lean{MinBal.folklore_conjecture}
+\uses{thm:main}
 This confirms the folklore conjecture that for any planar graph $G$, a minimum balanced bipartition $(V_1, V_2)$ of $V(G)$ has $e(V_1, V_2) \leq |V(G)|$.
+\end{corollary}
