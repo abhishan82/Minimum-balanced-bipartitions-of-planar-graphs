@@ -67,14 +67,18 @@ def SepTri.IsBalanced (T : Triangulation G) (st : SepTri T) : Prop :=
 
 /-! ## Special case propositions -/
 
-/-- **Axiom (separating triangle bipartition).**
+/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
+    Separating triangle bipartition.
     Given a balanced separating triangle, there exists a bipartition where:
     - both parts are near-triangulations,
     - the bipartition is balanced,
     - the block counts satisfy b₁ + b₂ ≤ i₁ + i₂ + 2.
     The existence of such a bipartition and the NT structures come from the
-    concrete plane graph geometry (combinatorial-map model). -/
-axiom sep_tri_bipartition
+    concrete plane graph geometry (combinatorial-map model).
+    Reason assumed: geometric core of Prop. 4.1 — a separating triangle's
+    two-region decomposition, read off the concrete embedding's face structure
+    once `toConcrete`/`induceData` are available. -/
+theorem sep_tri_bipartition
     (T  : Triangulation G)
     (st : SepTri T)
     (hb : st.IsBalanced T) :
@@ -84,7 +88,7 @@ axiom sep_tri_bipartition
       bp.IsBalanced ∧
       blockCount (G.induce (↑bp.V₁ : Set V)) +
       blockCount (G.induce (↑bp.V₂ : Set V)) ≤
-      internalVertCount NT₁.outer + internalVertCount NT₂.outer + 2
+      internalVertCount NT₁.outer + internalVertCount NT₂.outer + 2 := sorry
 
 /-- **Proposition 4.1 (warmup).**
     Handles the case where G has a "balanced" separating triangle.
@@ -102,11 +106,14 @@ theorem prop_4_1
   -- Witness i₁ = internalVertCount NT₁.outer, i₂ = internalVertCount NT₂.outer.
   exact ⟨internalVertCount NT₁.outer, internalVertCount NT₂.outer, hbcount, hcor⟩
 
-/-- **Axiom (degree-1 sink bipartition).**
+/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
+    Degree-1 sink bipartition.
     Geometric content of Prop 4.2: given a 4-connected sink component S with ≥ 5 vertices
     and a small interval I, there is a balanced bipartition with NT structures on both parts
-    and block count bound b₁ + b₂ ≤ i₁ + i₂ + 2. -/
-axiom deg1_sink_bipartition
+    and block count bound b₁ + b₂ ≤ i₁ + i₂ + 2.
+    Reason assumed: geometric core of Prop. 4.2, built from the concrete
+    embedding plus 4-connectivity, once `toConcrete`/`induceData` are available. -/
+theorem deg1_sink_bipartition
     (T : Triangulation G)
     (S_verts : Finset V) (I_verts : Finset V)
     (hS4c  : Is4Connected (G.induce (↑S_verts : Set V)))
@@ -120,7 +127,7 @@ axiom deg1_sink_bipartition
       bp.IsBalanced ∧
       blockCount (G.induce (↑bp.V₁ : Set V)) +
       blockCount (G.induce (↑bp.V₂ : Set V)) ≤
-      internalVertCount NT₁.outer + internalVertCount NT₂.outer + 2
+      internalVertCount NT₁.outer + internalVertCount NT₂.outer + 2 := sorry
 
 /-- **Proposition 4.2 (degree-1 sink).**
     Handles the case where the sink of the standard tree has in-degree 1. -/
@@ -139,10 +146,14 @@ theorem prop_4_2
     internalVertCount NT₁.outer, internalVertCount NT₂.outer,
     hbcount, cor_2_2_concrete T bp NT₁ NT₂⟩
 
-/-- **Axiom (tiny sink bipartition).**
+/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
+    Tiny sink bipartition.
     Geometric content of Prop 4.3: when |V(S)| = 4 (S ≅ K₄), there is a balanced
-    bipartition with NT structures on both parts and block count bound. -/
-axiom tiny_sink_bipartition
+    bipartition with NT structures on both parts and block count bound.
+    Reason assumed: geometric core of Prop. 4.3, same embedding-dependent
+    construction as Prop. 4.2, small case, once `toConcrete`/`induceData` are
+    available. -/
+theorem tiny_sink_bipartition
     (T : Triangulation G)
     (S_verts : Finset V)
     (hS4 : S_verts.card = 4) :
@@ -152,7 +163,7 @@ axiom tiny_sink_bipartition
       bp.IsBalanced ∧
       blockCount (G.induce (↑bp.V₁ : Set V)) +
       blockCount (G.induce (↑bp.V₂ : Set V)) ≤
-      internalVertCount NT₁.outer + internalVertCount NT₂.outer + 2
+      internalVertCount NT₁.outer + internalVertCount NT₂.outer + 2 := sorry
 
 /-- **Proposition 4.3 (tiny sink).**
     Handles the case where |V(S)| = 4 (S ≅ K₄). -/
@@ -166,12 +177,15 @@ theorem prop_4_3
     internalVertCount NT₁.outer, internalVertCount NT₂.outer,
     hbcount, cor_2_2_concrete T bp NT₁ NT₂⟩
 
-/-- **Axiom (no balanced sep-tri → sink case).**
+/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
+    No balanced sep-tri → sink case.
     When G has no balanced separating triangle, the standard-tree decomposition
     produces a 4-connected sink S with either |S| ≥ 5 (→ Prop 4.2) or |S| = 4
     (→ Prop 4.3), together with the interval data needed.
-    Deferred to the combinatorial-map model. -/
-axiom no_sep_tri_gives_sink
+    Reason assumed: "separating triangle" and the standard tree are embedding
+    notions, so this is deferred to the combinatorial-map model like the other
+    Section 4 cases, once `toConcrete`/`induceData` are available. -/
+theorem no_sep_tri_gives_sink
     (T : Triangulation G)
     (h : ¬ ∃ st : SepTri T, st.IsBalanced T) :
     (∃ (S_verts I_verts : Finset V),
@@ -180,7 +194,7 @@ axiom no_sep_tri_gives_sink
       I_verts.card ≤ T.n / 2 + 1 ∧
       ∃ a b c : V, a ∈ S_verts ∧ b ∈ S_verts ∧ c ∈ S_verts ∧
                    a ∈ I_verts ∧ b ∈ I_verts ∧ c ∈ I_verts) ∨
-    (∃ S_verts : Finset V, S_verts.card = 4)
+    (∃ S_verts : Finset V, S_verts.card = 4) := sorry
 
 /-- **Steps 2–5 of Theorem 1.1.**
     When G has no balanced separating triangle, reduces to Prop 4.2 or Prop 4.3. -/

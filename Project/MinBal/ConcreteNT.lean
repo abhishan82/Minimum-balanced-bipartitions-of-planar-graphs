@@ -166,7 +166,8 @@ end ConcretePlaneNT
 
 /-! ## Cut-vertex decomposition axiom -/
 
-/-- **Axiom (cut-vertex decomposition — geometric core).**
+/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
+    Cut-vertex decomposition — geometric core.
     A near-triangulation with a cut vertex `c` decomposes into two sub-near-triangulations
     on sets S₁, S₂.  The geometric content: c is the unique shared vertex, the pieces
     partition V, the components `G[Sᵢ \ {c}]` are connected (characterising the components
@@ -174,8 +175,9 @@ end ConcretePlaneNT
     The edge-count equation `G.edgeFinset.card = NT₁.e + NT₂.e` is derived as a theorem
     from the connectivity conditions via `cut_vertex_no_cross_edge` + `induce_edge_split`.
     The block-count equation `blockCount G = NT₁.b + NT₂.b` is derived as a theorem
-    via `blockCount_add_of_no_cross`. -/
-axiom concretePlaneNT_cut_vertex_decomp_geo
+    via `blockCount_add_of_no_cross`. Reason assumed: derivable once `toConcrete`/
+    `induceData` give the concrete rotation system, purely from its face structure. -/
+theorem concretePlaneNT_cut_vertex_decomp_geo
     {V : Type*} [Fintype V] {G : SimpleGraph V}
     (NT : MinBal.NearTriangulation G)
     (c : V) (hcv : MinBal.IsCutVertex G c) (hb : 2 ≤ MinBal.blockCount G) :
@@ -187,7 +189,7 @@ axiom concretePlaneNT_cut_vertex_decomp_geo
       S₁ ∪ S₂ = Finset.univ ∧
       (G.induce (↑(S₁ \ {c} : Finset V) : Set V)).Connected ∧
       (G.induce (↑(S₂ \ {c} : Finset V) : Set V)).Connected ∧
-      NT.i = NT₁.i + NT₂.i
+      NT.i = NT₁.i + NT₂.i := sorry
 
 omit [Fintype V] [DecidableEq V] in
 /-- Helper: `Fintype.card ↥(↑S : Set V) = S.card`. -/
@@ -208,14 +210,18 @@ noncomputable def inducePlaneGraph (cnt : ConcretePlaneNT G) (S : Finset V)
   cmap  := cnt.pg.cmap.induce S
   euler := by simpa using CombMap.induce_euler cnt.pg.cmap S hconn
 
-/-- **Axiom (induced triangulation data).**
+/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
+    Induced triangulation data.
     A connected induced subgraph with ≥ 2 vertices of a `ConcretePlaneNT` inherits
     the near-triangulation structure from the ambient plane embedding: an outer face,
     triangular inner faces, the dart-to-vertex bijection per face, the face-set
     cardinality equation, and at least one block.
     Geometric content: the induced rotation system preserves planarity and the
-    near-triangulation property is inherited from the ambient embedding. -/
-axiom induceData (cnt : ConcretePlaneNT G) (S : Finset V)
+    near-triangulation property is inherited from the ambient embedding.
+    Reason assumed: a direct consequence of `induce_euler` in the same CombMap
+    model — the triangle-inherited faces are already provable, only the outer-face
+    identification (blocked on `induce_euler`) remains. -/
+theorem induceData (cnt : ConcretePlaneNT G) (S : Finset V)
     (hconn : (G.induce (↑S : Set V)).Connected) (h2 : 2 ≤ S.card) :
     ∃ (outerFace : (cnt.inducePlaneGraph S hconn).Face),
       (∀ f : (cnt.inducePlaneGraph S hconn).Face, f ≠ outerFace →
@@ -224,7 +230,7 @@ axiom induceData (cnt : ConcretePlaneNT G) (S : Finset V)
         dartCount (cnt.inducePlaneGraph S hconn) f =
         (faceVertSet (cnt.inducePlaneGraph S hconn) f).card) ∧
       (Finset.univ.image (faceVertSet (cnt.inducePlaneGraph S hconn))).card =
-        (cnt.inducePlaneGraph S hconn).cmap.facePerm.cycleFactorsFinset.card
+        (cnt.inducePlaneGraph S hconn).cmap.facePerm.cycleFactorsFinset.card := sorry
 
 /-- A connected induced subgraph with ≥ 2 vertices of a `ConcretePlaneNT` is itself
     a `ConcretePlaneNT`. Uses `CombMap.induce` for the rotation system and
@@ -245,12 +251,16 @@ noncomputable def induce (cnt : ConcretePlaneNT G) (S : Finset V)
 
 end ConcretePlaneNT
 
-/-- **Axiom (realization).**
-    Every abstract `NearTriangulation G` is realizable as a `ConcretePlaneNT G`.
+/-- **Bucket C** (deep external geometry; assumed with citation — see README ledger).
+    Realization: every abstract `NearTriangulation G` is realizable as a
+    `ConcretePlaneNT G`.
     Geometric content: the abstract near-triangulation axioms characterize exactly those
-    graphs admitting a planar embedding as a near-triangulation (combinatorial-map model). -/
-axiom NearTriangulation.toConcrete {V : Type*} [Fintype V] {G : SimpleGraph V}
-    (NT : NearTriangulation G) : ConcretePlaneNT G
+    graphs admitting a planar embedding as a near-triangulation (combinatorial-map model).
+    This is the converse-Euler / planar-realizability direction; Jackson–Yu-adjacent
+    (B. Jackson, X. Yu, "Hamilton cycles in plane triangulations", J. Graph Theory
+    41 (2002) 138–150). -/
+noncomputable def NearTriangulation.toConcrete {V : Type*} [Fintype V] {G : SimpleGraph V}
+    (NT : NearTriangulation G) : ConcretePlaneNT G := sorry
 
 /-- Derive the full cut-vertex decomposition from the geometric core axiom.
     - `2 ≤ Sᵢ.card` follows from `NTᵢ.two_verts` + `fintype_card_coe_eq`.

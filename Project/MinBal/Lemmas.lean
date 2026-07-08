@@ -145,13 +145,16 @@ lemma K2_hasNT {u v : V} (huv : G.Adj u v) : HasNT G {u, v} := by
 
 /-! ## Lemma 3.5 (partition refinement) — stated before 3.1 and 3.3 which both use it -/
 
-/-- **Axiom (plane graph good vertex — existence, two neighbors, and V₂ biconnectivity).**
+/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
+    Plane graph good vertex — existence, two neighbors, and V₂ biconnectivity.
     The key planarity content: given an NT-bipartition with |V₂| > |avoid|,
     the planar boundary between V₁ and V₂ contains a vertex v ∈ V₂ \ avoid
     with two distinct V₁-neighbors such that G[V₂ \ {v}] is biconnected.
     Biconnectivity of G[V₁ ∪ {v}] is then derived combinatorially via
-    `biconn_add_vertex` (no planarity needed for that half). -/
-axiom nt_good_vertex_exists
+    `biconn_add_vertex` (no planarity needed for that half).
+    Reason assumed: a face-walk argument on the concrete embedding, derivable
+    once `toConcrete`/`induceData` are available. -/
+theorem nt_good_vertex_exists
     {V : Type*} [Fintype V] {G : SimpleGraph V}
     (T      : Triangulation G)
     (bp     : Bipartition V)
@@ -164,7 +167,7 @@ axiom nt_good_vertex_exists
     ∃ v : V, v ∈ bp.V₂ ∧ v ∉ avoid ∧
       ∃ u₁ u₂ : V, u₁ ∈ bp.V₁ ∧ u₂ ∈ bp.V₁ ∧ u₁ ≠ u₂ ∧
         G.Adj v u₁ ∧ G.Adj v u₂ ∧
-        IsBiconnected (G.induce (↑(bp.V₂ \ {v}) : Set V))
+        IsBiconnected (G.induce (↑(bp.V₂ \ {v}) : Set V)) := sorry
 
 /-- **Good move exists** (derived from `nt_good_vertex_exists` + `biconn_add_vertex`).
     The biconnectivity of G[V₁ ∪ {v}] follows combinatorially from v having two

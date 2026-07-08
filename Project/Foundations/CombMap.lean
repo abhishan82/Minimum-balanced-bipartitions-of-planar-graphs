@@ -294,14 +294,17 @@ noncomputable def induce (cm : G.CombMap) (S : Finset V) :
   perm   := cm.inducePerm S
   source := cm.inducePerm_source S
 
-/-- **Axiom**: The Euler characteristic of the induced CombMap on a connected G[S].
+/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
+    The Euler characteristic of the induced CombMap on a connected G[S].
     The face count of the induced CombMap satisfies the Euler formula for the
-    plane graph restricted to S. -/
-axiom induce_euler (cm : G.CombMap) (S : Finset V)
+    plane graph restricted to S. Reason assumed: provable by vertex/edge-deletion
+    induction on `cycleFactorsFinset`, blocked only by a missing "cycle-merge"
+    counting lemma, not by any external theorem. -/
+theorem induce_euler (cm : G.CombMap) (S : Finset V)
     (hconn : (G.induce (↑S : Set V)).Connected) :
     (Fintype.card ↥(↑S : Set V) : ℤ) -
     (G.induce (↑S : Set V)).edgeFinset.card +
-    (cm.induce S).faceCount = 2
+    (cm.induce S).faceCount = 2 := sorry
 
 end CombMap
 
