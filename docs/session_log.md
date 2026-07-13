@@ -182,3 +182,30 @@ site reflects the new content.
 **Current state:** `main` at `6e07518` before this log entry; the
 CLAUDE.md milestone update and this entry are committed together as the
 closing commit of the session.
+
+---
+
+## 2026-07-13
+
+**Done:**
+- Added a new non-negotiable convention to CLAUDE.md: session startup reads
+  `docs/next_session.md` and executes it; session end overwrites it with the
+  next session's prompt (agreed with the author) and commits — a session
+  isn't finished until its successor is queued.
+- Seeded `docs/next_session.md` with the author-agreed prompt for the next
+  session: (1) sync the doc-comment/README ledger buckets once the author
+  fills in the post-review revisions, (2) rank the bucket-A sorry survivors
+  by estimated proof difficulty without attempting any proofs, propose the
+  top-ranked one as minbal's first weekly lemma, and draft its proof-session
+  prompt (mirroring the sibling repo's lemma-prompt constraints: no new
+  axioms/sorries, statement unchanged, search Mathlib+Foundations first,
+  3-strategies-then-stop, walkthrough on success, prover_log either way),
+  (3) log/commit/push.
+
+**Found:** nothing.
+
+**Blocked:** nothing. The bucket-review revisions are a placeholder
+pending the author's Tuesday review — next session should not proceed past
+step 1 until that's filled in.
+
+**Current state:** `main` at this commit once pushed.

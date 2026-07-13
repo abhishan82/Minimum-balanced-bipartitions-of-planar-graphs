@@ -1,0 +1,4 @@
+Read CLAUDE.md. Two tasks:
+1. Bucket-review sync. The author has reviewed the 9 sorried declarations and revised buckets as follows: [AUTHOR FILLS IN AFTER TUESDAY REVIEW — e.g. "sep_tri_bipartition: A→B; rest unchanged"]. Update the doc comments and README ledger to match, one commit.
+2. Rank the bucket-A survivors by estimated proof difficulty (easiest first), using: what Foundations/ actually provides today, statement size, and how much new supporting API each would need. Output the ranking with one-line reasoning per item into the session log. Do NOT attempt any proofs. Propose the top-ranked item as minbal's first weekly lemma, and write a draft proof-session prompt for it into docs/next_session.md (same constraints as the sibling repo's lemma prompt: no new axioms/sorries, statement unchanged, search Mathlib+Foundations first, 3-strategies-then-stop, walkthrough on success, prover_log either way).
+3. Append session log, commit, push.

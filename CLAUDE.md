@@ -30,6 +30,10 @@ results in the README ledger.
 - **Session log:** at the end of every session, append a dated summary (done /
   found / blocked) to `docs/session_log.md`. Append only — never edit past
   entries. Commit and push it.
+- **Session startup:** read `docs/next_session.md` and execute it.
+  **Session end:** overwrite it with the next session's prompt (agreed with
+  the author), then commit — a session isn't finished until its successor is
+  queued.
 - **Prover log:** every time a proof attempt on a lemma gets stuck or fails,
   append one line to `docs/prover_log.md` (date, lemma, model/tool, outcome).
   This feeds a planned benchmark paper — failures are data, record them.
