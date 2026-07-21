@@ -80,6 +80,11 @@ Let $G$ be a plane triangulation such that $|V(G)| \geq 4$ and the vertex-set ${
 \begin{proposition}[Warmup Case]
 \label{prop:warmup}
 \lean{MinBal.prop_4_1}
+% NOTE (2026-07-21): Lean's sep_tri_bipartition states the weaker +2 form
+% with no biconnectivity requirement on either part, vs. the +1 form with
+% G[V_1] biconnected stated here. Flagged for the author, not silently
+% changed -- may be an intentional weakening that still feeds the final
+% +2 bound of Theorem 1.1. See session log 2026-07-21.
 If $G$ is a plane triangulation with $|V(G)|=n$ and $T \subseteq G$ is a separating triangle such that each of the two components of $G-V(T)$ contains at least $\lfloor \frac{n}{2} \rfloor-1$ vertices, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that $G[V_1]$ is a biconnected near-triangulation and $G[V_2]$ is a connected near-triangulation with the number of blocks exceeding the total number of internal vertices in $G[V_1]$ and $G[V_2]$ by at most 1.
 \end{proposition}
 
@@ -93,6 +98,23 @@ If $G$ is a plane triangulation with $|V(G)|=n$ such that the sink in its direct
 \label{prop:sonly4}
 \lean{MinBal.prop_4_3}
 If $G$ is a plane triangulation with $|V(G)|=n$ such that the sink triangulation $S$ of $G$ contains exactly 4 vertices, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ such that both $V_1$ and $V_2$ induce connected near-triangulations, and the total number of blocks in $G[V_1]$ and $G[V_2]$ exceeds the total number of internal vertices by at most 2.
+\end{proposition}
+
+\section{Sink Navigation (Section 5)}
+
+\begin{definition}[Sink Data]
+\label{def:sinkdata}
+\lean{MinBal.SinkData}
+\uses{prop:warmup}
+The data extracted from the directed std-tree decomposition once no balanced separating triangle exists: the sink component $S$ (itself a plane triangulation with no separating triangle of its own), a separating triangle of $G$ witnessing $S$, the sink's degree in the directed std-tree, and the interval navigation data used in the degree-1 case (Proposition~\ref{prop:onedegsink}).
+\end{definition}
+
+\begin{proposition}[Sink Navigation]
+\label{prop:sinknav}
+\lean{MinBal.sink_navigation}
+\uses{def:sinkdata, lem:4con, lem:3con1}
+\notready
+If $G$ is a plane triangulation whose sink $S$ has directed-std-tree degree at least 2 and $|V(S)| \geq 6$, then there exists a balanced bipartition $(V_1, V_2)$ of $V(G)$ satisfying the conclusion of Theorem~\ref{thm:main}. This is the technical core of the paper (Section 5), using the navigation Lemmas~\ref{lem:4con} and~\ref{lem:3con1} to build the bipartition incrementally. \textbf{Not yet formalized} -- the main outstanding mathematical content of this repository.
 \end{proposition}
 
 \section{Algorithm and Proof Structure}
