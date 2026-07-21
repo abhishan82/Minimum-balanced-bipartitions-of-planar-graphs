@@ -209,3 +209,114 @@ pending the author's Tuesday review — next session should not proceed past
 step 1 until that's filled in.
 
 **Current state:** `main` at this commit once pushed.
+
+---
+
+## 2026-07-21
+
+**Statement-faithfulness repair.** The author replaced `docs/next_session.md`
+with a full rewrite (a much larger and more specific brief than the bucket-
+review placeholder queued 2026-07-13) diagnosing five concrete bugs in the
+no-balanced-sep-tri case analysis and prescribing the fix. Restart-and-read
+picked up the new prompt correctly. Zero proof work this session — every
+touched declaration stays `:= sorry`; `main_theorem`/`folklore_conjecture`
+still compile through the whole sorry chain, now with an honest, correctly-
+scoped gap instead of a silently-vacuous case.
+
+**Done:**
+- **Task 1 — `SinkData`:** new interface structure bundling the sink
+  component `S`, `TS : Triangulation (G.induce ↑S)` with `noSepTri : ¬
+  Nonempty (SepTri TS)`, a witnessing `sepInG : ∃ st : SepTri T, st.sa ∈ S ∧
+  st.sb ∈ S ∧ st.sc ∈ S` (existing `SepTri` predicate reused, nothing
+  invented), an opaque `stDegree : ℕ`, and the degree-1 interval data
+  (`I`, `hI_small`, `hS_I_tri`, migrated verbatim from the old
+  `deg1_sink_bipartition`). Mirrors `NearTriangulation`/`toConcrete`: an
+  opaque Type-valued interface, not a construction.
+- **Task 2 — `no_sep_tri_gives_sink`:** was `theorem ... : (∃ S I, ...) ∨
+  (∃ S, S.card = 4) := sorry` — the right disjunct is true of any graph with
+  ≥4 vertices, i.e. vacuous. Restated as `noncomputable def ... : SinkData
+  T := sorry` (Type-valued, so `def` not `theorem`, matching `toConcrete`'s
+  precedent), directly asserting sink existence.
+- **Task 3 — `deg1_sink_bipartition`/`tiny_sink_bipartition`:** both now take
+  `(sd : SinkData T)` plus a discriminating hypothesis (`sd.stDegree = 1` /
+  `sd.S.card = 4`) instead of a free-floating `S_verts`. `deg1_sink_bipartition`'s
+  conclusion corrected to match blueprint `prop:onedegsink` exactly ("both
+  parts biconnected near-triangulations" — no block-count clause; the old
+  Lean had one that isn't in the paper's stated Prop 4.2).
+  `prop_4_2`'s wrapper proof updated mechanically (no new math) to derive
+  the block-count bound from biconnectivity via the already-proved
+  `biconnected_blockCount_eq_one`. `tiny_sink_bipartition` keeps its
+  existing conclusion shape (matches blueprint `prop:sonly4`); its doc
+  comment and `prop_4_3`'s now correctly say "Proposition 4.4" instead of
+  the former mislabel "4.3" — **did not rename the `prop_4_3` Lean
+  identifier itself** (would touch call sites + blueprint `\lean` tag,
+  judged out of scope for a statement-only session; flagged below for the
+  author).
+- **Task 4 — `sink_navigation`:** new honest stub for paper Section 5
+  (degree ≥2, |S|≥6), previously entirely absent — the old two-way case
+  split silently routed this case through the vacuous `S.card=4` branch.
+- **Task 5 — `main_theorem_no_sep_tri`:** rewritten as a genuine three-way
+  `by_cases`/`by_cases` split on `sd.stDegree = 1` then `sd.S.card = 4`,
+  routing the remaining case through `sink_navigation`. Needed two small
+  arithmetic/semantic bridge lemmas (`sd.stDegree ≠ 1 ⟹ ≥ 2`;
+  `sd.S.card ≠ 4 ⟹ ≥ 6`), stated as their own sorried declarations per the
+  brief's explicit instruction rather than hand-waved — neither is provable
+  from Finset arithmetic alone (`stDegree` could be 0; `S.card` could be 5).
+- **Task 6 — ledger, blueprint, verification:** README re-bucketed (table
+  below); added a prominent standalone "Section 5 not yet formalized"
+  callout. Blueprint: added a `%`-comment on `prop:warmup` carrying the
+  bug-5 flag (source-only, doesn't change rendered content), and a new
+  "Sink Navigation (Section 5)" section with `def:sinkdata` and
+  `prop:sinknav` (the latter marked `\notready`). Regenerated
+  `blueprint/lean_decls`. Verified locally, each command named:
+  `lake build` (0), `leanblueprint pdf` (0, 4-page PDF), `leanblueprint
+  web` (0), `lake exe checkdecls blueprint/lean_decls` (0, all 12 names
+  resolve including the 2 new ones).
+- Committed in 3 pieces: Lean changes (`59df5ea`), README+blueprint
+  (`604ee85`), this close-out.
+
+**Bucket table (before → after):**
+
+| Declaration | Before | After | Why |
+|---|---|---|---|
+| `induce_euler` | A | A | untouched |
+| `concretePlaneNT_cut_vertex_decomp_geo` | A | A | untouched |
+| `induceData` | A | A | untouched |
+| `NearTriangulation.toConcrete` | C | C | untouched |
+| `nt_good_vertex_exists` | A | A | untouched |
+| `sep_tri_bipartition` | A | A | untouched; conclusion-drift flagged, not fixed |
+| `deg1_sink_bipartition` | A | B | now consumes `SinkData`, conclusion corrected to match blueprint |
+| `tiny_sink_bipartition` | A | B | now consumes `SinkData`; Prop 4.4 mislabel comment fixed |
+| `no_sep_tri_gives_sink` | A | C | restated to return `SinkData T` directly, no longer vacuous |
+| `SinkData` (new) | — | C | new opaque interface |
+| `sink_navigation` (new) | — | C | new; Section 5, **NOT YET FORMALIZED** |
+| `sinkData_stDegree_ge_two_of_ne_one` (new) | — | C | new bridge lemma |
+| `sinkData_card_ge_six_of_ne_four` (new) | — | C | new bridge lemma |
+
+Repo-wide: 0 axioms throughout (unchanged); sorries 9 → 12 (net +3: `sink_navigation`
+plus the two bridge lemmas; the four restated declarations stay sorried 1-for-1).
+
+**Found (flagged for author, not silently fixed — bug #5 from the brief):**
+`sep_tri_bipartition`'s conclusion states `blockCount ≤ internal + 2` with no
+biconnectivity requirement on either part. Blueprint `prop:warmup` (the
+paper's actual Prop 4.1) states the stronger/different form: `+1` with
+`G[V₁]` specifically **biconnected** and `G[V₂]` merely connected. This may
+be an intentional weakening on the Lean side that still feeds the final `+2`
+bound of Theorem 1.1 through a different route — or it may be a genuine gap.
+Left exactly as instructed: noted in the blueprint source (`%` comment on
+`prop:warmup`) and here, not silently changed. **Needs an author decision.**
+
+**Also flagged:** `prop_4_3`'s Lean identifier still says "4_3" though it now
+correctly documents itself as realizing paper Prop 4.4 (the doc-comment
+mislabel is fixed; the identifier is not, since renaming touches call sites
+in `main_theorem_no_sep_tri` and the blueprint's `\lean{MinBal.prop_4_3}`
+tag at `prop:sonly4` — judged out of scope for a statement-faithfulness-only
+session with zero proof work). Author may want a follow-up rename session.
+
+**Blocked:** nothing. `lake build` green throughout every commit (checked
+after each of the 3 commits' worth of changes, not just at the end).
+
+**Current state:** `main` at this commit once pushed. Next queued prompt
+(see `docs/next_session.md`, overwritten as part of this close-out): begin
+formalizing Section 5 (`sink_navigation`) — deliberately NOT started this
+session.
