@@ -65,6 +65,38 @@ def SepTri.IsBalanced (T : Triangulation G) (st : SepTri T) : Prop :=
   ∀ (C : H.ConnectedComponent),
     Fintype.card V / 2 ≤ Set.ncard C.supp + 1
 
+/-! ## Sink data (interface to the Jackson–Yu std-tree decomposition) -/
+
+/-- **Bucket C** (deep external geometry; awaiting the std-tree decomposition
+    construction — see README ledger).
+    The data extracted from the (unformalized) directed std-tree decomposition
+    of `T` once no balanced separating triangle exists: the sink component `S`
+    — witnessed as a plane triangulation with no separating triangle of its
+    own — together with a separating triangle of `G` whose vertices lie in
+    `S` (this forces `S.card ≥ 4`), the sink's degree in the directed
+    std-tree, and the interval navigation data threaded through the degree-1
+    case (Prop 4.2).
+    This is an opaque interface, mirroring how `NearTriangulation`/`toConcrete`
+    are handled: it does NOT formalize the std-tree or the separating-triangle
+    decomposition construction itself, only what the downstream case-analysis
+    (Props 4.2, 4.4, and Section 5's `sink_navigation`) consumes. -/
+structure SinkData (T : Triangulation G) where
+  /-- The sink component's vertex set. -/
+  S        : Finset V
+  /-- `G[S]` is itself a plane triangulation. -/
+  TS       : Triangulation (G.induce (↑S : Set V))
+  /-- `S` has no separating triangle of its own (it is a genuine sink). -/
+  noSepTri : ¬ Nonempty (SepTri TS)
+  /-- `S` is cut off by some separating triangle of `G` (forces `S.card ≥ 4`). -/
+  sepInG   : ∃ st : SepTri T, st.sa ∈ S ∧ st.sb ∈ S ∧ st.sc ∈ S
+  /-- The sink's degree in the directed std-tree (opaque; used only to state
+      the degree-1 vs degree-≥2 split). -/
+  stDegree : ℕ
+  /-- The interval navigation data threaded through the degree-1 case. -/
+  I        : Finset V
+  hI_small : I.card ≤ T.n / 2 + 1
+  hS_I_tri : ∃ a b c : V, a ∈ S ∧ b ∈ S ∧ c ∈ S ∧ a ∈ I ∧ b ∈ I ∧ c ∈ I
+
 /-! ## Special case propositions -/
 
 /-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
@@ -106,57 +138,51 @@ theorem prop_4_1
   -- Witness i₁ = internalVertCount NT₁.outer, i₂ = internalVertCount NT₂.outer.
   exact ⟨internalVertCount NT₁.outer, internalVertCount NT₂.outer, hbcount, hcor⟩
 
-/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
-    Degree-1 sink bipartition.
-    Geometric content of Prop 4.2: given a 4-connected sink component S with ≥ 5 vertices
-    and a small interval I, there is a balanced bipartition with NT structures on both parts
-    and block count bound b₁ + b₂ ≤ i₁ + i₂ + 2.
-    Reason assumed: geometric core of Prop. 4.2, built from the concrete
-    embedding plus 4-connectivity, once `toConcrete`/`induceData` are available. -/
+/-- **Bucket B** (provable pure combinatorics; assumed for now — see README ledger).
+    Degree-1 sink bipartition (paper Proposition 4.2).
+    Given sink data `sd` whose std-tree degree is 1, there exists a balanced
+    bipartition of `V(G)` such that both parts induce biconnected
+    near-triangulations (blueprint `prop:onedegsink`). -/
 theorem deg1_sink_bipartition
-    (T : Triangulation G)
-    (S_verts : Finset V) (I_verts : Finset V)
-    (hS4c  : Is4Connected (G.induce (↑S_verts : Set V)))
-    (hsize : S_verts.card ≥ 5)
-    (hI_small : I_verts.card ≤ T.n / 2 + 1)
-    (hS_I_tri : ∃ a b c : V, a ∈ S_verts ∧ b ∈ S_verts ∧ c ∈ S_verts ∧
-                              a ∈ I_verts ∧ b ∈ I_verts ∧ c ∈ I_verts) :
+    (T  : Triangulation G)
+    (sd : SinkData T)
+    (hdeg1 : sd.stDegree = 1) :
     ∃ (bp : Bipartition V)
       (NT₁ : NearTriangulation (G.induce (↑bp.V₁ : Set V)))
       (NT₂ : NearTriangulation (G.induce (↑bp.V₂ : Set V))),
       bp.IsBalanced ∧
-      blockCount (G.induce (↑bp.V₁ : Set V)) +
-      blockCount (G.induce (↑bp.V₂ : Set V)) ≤
-      internalVertCount NT₁.outer + internalVertCount NT₂.outer + 2 := sorry
+      IsBiconnected (G.induce (↑bp.V₁ : Set V)) ∧
+      IsBiconnected (G.induce (↑bp.V₂ : Set V)) := sorry
 
 /-- **Proposition 4.2 (degree-1 sink).**
-    Handles the case where the sink of the standard tree has in-degree 1. -/
+    Handles the case where the sink of the standard tree has in-degree 1.
+    Block-count bound is derived mechanically from biconnectivity via
+    `biconnected_blockCount_eq_one` (each biconnected part has exactly 1
+    block), rather than being asserted directly by `deg1_sink_bipartition`. -/
 theorem prop_4_2
-    (T : Triangulation G)
-    (S_verts : Finset V) (I_verts : Finset V)
-    (hS4c  : Is4Connected (G.induce (↑S_verts : Set V)))
-    (hsize : S_verts.card ≥ 5)
-    (hI_small : I_verts.card ≤ T.n / 2 + 1)
-    (hS_I_tri : ∃ a b c : V, a ∈ S_verts ∧ b ∈ S_verts ∧ c ∈ S_verts ∧
-                              a ∈ I_verts ∧ b ∈ I_verts ∧ c ∈ I_verts) :
+    (T  : Triangulation G)
+    (sd : SinkData T)
+    (hdeg1 : sd.stDegree = 1) :
     ∃ bp : Bipartition V, MainConclusion T bp := by
-  obtain ⟨bp, NT₁, NT₂, hbal, hbcount⟩ :=
-    deg1_sink_bipartition T S_verts I_verts hS4c hsize hI_small hS_I_tri
-  exact ⟨bp, hbal, ⟨NT₁⟩, ⟨NT₂⟩,
-    internalVertCount NT₁.outer, internalVertCount NT₂.outer,
-    hbcount, cor_2_2_concrete T bp NT₁ NT₂⟩
+  obtain ⟨bp, NT₁, NT₂, hbal, hbc₁, hbc₂⟩ := deg1_sink_bipartition T sd hdeg1
+  have hb₁ : partBlockCount G bp.V₁ = 1 := biconnected_blockCount_eq_one hbc₁
+  have hb₂ : partBlockCount G bp.V₂ = 1 := biconnected_blockCount_eq_one hbc₂
+  refine ⟨bp, hbal, ⟨NT₁⟩, ⟨NT₂⟩, ?_⟩
+  refine ⟨internalVertCount NT₁.outer, internalVertCount NT₂.outer, ?_,
+    cor_2_2_concrete T bp NT₁ NT₂⟩
+  omega
 
-/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
-    Tiny sink bipartition.
-    Geometric content of Prop 4.3: when |V(S)| = 4 (S ≅ K₄), there is a balanced
-    bipartition with NT structures on both parts and block count bound.
-    Reason assumed: geometric core of Prop. 4.3, same embedding-dependent
-    construction as Prop. 4.2, small case, once `toConcrete`/`induceData` are
-    available. -/
+/-- **Bucket B** (provable pure combinatorics; assumed for now — see README ledger).
+    Tiny sink bipartition (paper **Proposition 4.4** — corrected from the
+    former mislabel "4.3"; |V(S)| = 4, i.e. S ≅ K₄).
+    Given sink data `sd` with `sd.S.card = 4`, there exists a balanced
+    bipartition of `V(G)` such that both parts induce connected
+    near-triangulations, with block count exceeding internal vertex count by
+    at most 2 (blueprint `prop:sonly4`). -/
 theorem tiny_sink_bipartition
-    (T : Triangulation G)
-    (S_verts : Finset V)
-    (hS4 : S_verts.card = 4) :
+    (T  : Triangulation G)
+    (sd : SinkData T)
+    (hS4 : sd.S.card = 4) :
     ∃ (bp : Bipartition V)
       (NT₁ : NearTriangulation (G.induce (↑bp.V₁ : Set V)))
       (NT₂ : NearTriangulation (G.induce (↑bp.V₂ : Set V))),
@@ -165,48 +191,87 @@ theorem tiny_sink_bipartition
       blockCount (G.induce (↑bp.V₂ : Set V)) ≤
       internalVertCount NT₁.outer + internalVertCount NT₂.outer + 2 := sorry
 
-/-- **Proposition 4.3 (tiny sink).**
+/-- **Proposition 4.4 (tiny sink)** — corrected from the former mislabel "4.3"
+    (this Lean declaration name is kept as `prop_4_3` for now; see session
+    log — renaming it touches call sites and blueprint `\lean` tags, out of
+    scope for a statement-faithfulness-only session).
     Handles the case where |V(S)| = 4 (S ≅ K₄). -/
 theorem prop_4_3
-    (T : Triangulation G)
-    (S_verts : Finset V)
-    (hS4 : S_verts.card = 4) :
+    (T  : Triangulation G)
+    (sd : SinkData T)
+    (hS4 : sd.S.card = 4) :
     ∃ bp : Bipartition V, MainConclusion T bp := by
-  obtain ⟨bp, NT₁, NT₂, hbal, hbcount⟩ := tiny_sink_bipartition T S_verts hS4
+  obtain ⟨bp, NT₁, NT₂, hbal, hbcount⟩ := tiny_sink_bipartition T sd hS4
   exact ⟨bp, hbal, ⟨NT₁⟩, ⟨NT₂⟩,
     internalVertCount NT₁.outer, internalVertCount NT₂.outer,
     hbcount, cor_2_2_concrete T bp NT₁ NT₂⟩
 
-/-- **Bucket A** (provable from Foundations; assumed for now — see README ledger).
-    No balanced sep-tri → sink case.
-    When G has no balanced separating triangle, the standard-tree decomposition
-    produces a 4-connected sink S with either |S| ≥ 5 (→ Prop 4.2) or |S| = 4
-    (→ Prop 4.3), together with the interval data needed.
-    Reason assumed: "separating triangle" and the standard tree are embedding
-    notions, so this is deferred to the combinatorial-map model like the other
-    Section 4 cases, once `toConcrete`/`induceData` are available. -/
-theorem no_sep_tri_gives_sink
+/-- **Bucket C** (deep external geometry; assumed for now — see README ledger).
+    No balanced sep-tri ⟹ sink `S` exists.
+    When `G` has no balanced separating triangle, the directed std-tree
+    decomposition — fully oriented by the negation of "balanced" (every
+    sep-triangle's sink-side component has ≤ ⌊n/2⌋−2 vertices) — produces a
+    genuine sink component, packaged as `SinkData`.
+    Reason assumed: existence rests on the full std-tree orientation → sink
+    argument, i.e. Jackson–Yu. The ⌊n/2⌋−2 bound stays upstream in `h`; it is
+    deliberately not recorded as a `SinkData` field. -/
+noncomputable def no_sep_tri_gives_sink
     (T : Triangulation G)
-    (h : ¬ ∃ st : SepTri T, st.IsBalanced T) :
-    (∃ (S_verts I_verts : Finset V),
-      Is4Connected (G.induce (↑S_verts : Set V)) ∧
-      S_verts.card ≥ 5 ∧
-      I_verts.card ≤ T.n / 2 + 1 ∧
-      ∃ a b c : V, a ∈ S_verts ∧ b ∈ S_verts ∧ c ∈ S_verts ∧
-                   a ∈ I_verts ∧ b ∈ I_verts ∧ c ∈ I_verts) ∨
-    (∃ S_verts : Finset V, S_verts.card = 4) := sorry
+    (h : ¬ ∃ st : SepTri T, st.IsBalanced T) : SinkData T := sorry
+
+/-! ## Section 5 — main navigation (NOT YET FORMALIZED) -/
+
+/-- **Bucket C** (deep external geometry; NOT YET FORMALIZED — see README
+    ledger). Paper Section 5 — the degree-≥2, |S|≥6 main navigation line, the
+    technical core of the paper (navigation Lemmas `lemma_3_1`/`lemma_3_3`).
+    This is the main outstanding mathematical content of the repository:
+    Section 5 is currently an honest stub, not a deferred easy case. -/
+theorem sink_navigation
+    (T  : Triangulation G)
+    (sd : SinkData T)
+    (hdeg  : sd.stDegree ≥ 2)
+    (hsize : sd.S.card ≥ 6) :
+    ∃ bp : Bipartition V, MainConclusion T bp := sorry
+
+/-! ## Case-split bridge facts -/
+
+/-- **Bucket C** (rests on a paper-specific structural fact about the
+    std-tree, not pure Finset arithmetic; assumed for now — see README
+    ledger). Small bridge for the degree trichotomy in
+    `main_theorem_no_sep_tri`: the sink's std-tree degree is never 0 (it has
+    at least the incoming edge witnessed by `sd.sepInG`), so `≠ 1` gives
+    `≥ 2`. Stated as its own sorried lemma rather than hand-waved. -/
+theorem sinkData_stDegree_ge_two_of_ne_one
+    (T : Triangulation G) (sd : SinkData T) (hne1 : sd.stDegree ≠ 1) :
+    2 ≤ sd.stDegree := sorry
+
+/-- **Bucket C** (rests on the paper's "≥1 edge" argument, not pure Finset
+    arithmetic; assumed for now — see README ledger).
+    Small bridge for the size trichotomy in `main_theorem_no_sep_tri`: a sink
+    with `S.card ≠ 4` (and the generic `S.card ≥ 4` from `sd.sepInG`) has
+    `S.card ≥ 6` — the author's "≥1 edge" argument rules out |S| = 5. Stated
+    as its own sorried lemma rather than hand-waved. -/
+theorem sinkData_card_ge_six_of_ne_four
+    (T : Triangulation G) (sd : SinkData T) (hne4 : sd.S.card ≠ 4) :
+    6 ≤ sd.S.card := sorry
 
 /-- **Steps 2–5 of Theorem 1.1.**
-    When G has no balanced separating triangle, reduces to Prop 4.2 or Prop 4.3. -/
+    When `G` has no balanced separating triangle, obtains the sink `S` from
+    `no_sep_tri_gives_sink` and splits three ways on its degree and size:
+    degree 1 → Prop 4.2; degree ≥ 2 and |S| = 4 → Prop 4.4; degree ≥ 2 and
+    |S| ≥ 6 → Section 5's `sink_navigation`. -/
 theorem main_theorem_no_sep_tri
     (T : Triangulation G)
     (h : ¬ ∃ st : SepTri T, st.IsBalanced T) :
     ∃ bp : Bipartition V, MainConclusion T bp := by
-  rcases no_sep_tri_gives_sink T h with
-    ⟨S_verts, I_verts, hS4c, hsize, hI_small, hS_I_tri⟩ |
-    ⟨S_verts, hS4⟩
-  · exact prop_4_2 T S_verts I_verts hS4c hsize hI_small hS_I_tri
-  · exact prop_4_3 T S_verts hS4
+  set sd := no_sep_tri_gives_sink T h
+  by_cases hdeg1 : sd.stDegree = 1
+  · exact prop_4_2 T sd hdeg1
+  · by_cases hS4 : sd.S.card = 4
+    · exact prop_4_3 T sd hS4
+    · exact sink_navigation T sd
+        (sinkData_stDegree_ge_two_of_ne_one T sd hdeg1)
+        (sinkData_card_ge_six_of_ne_four T sd hS4)
 
 /-! ## Main theorem -/
 
